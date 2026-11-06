@@ -108,9 +108,9 @@ document.addEventListener("DOMContentLoaded", () => {
             text.textContent = 'Success! Redirecting...';
             spin.style.display = 'none';
 
-            // Redirect to dashboard after a brief delay
+            // FIX: Changed '/dashboard.html' to 'dashboard.html' to respect GitHub Pages subfolder
             setTimeout(() => {
-                window.location.href = '/dashboard.html';
+                window.location.href = 'dashboard.html';
             }, 1000);
 
         } catch (error) {
@@ -306,8 +306,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.getElementById('payText').textContent = 'Payment Verified! Redirecting...';
                         document.getElementById('btnPay').style.background = '#059669'; // Success Green
                         
+                        // FIX: Changed '/dashboard.html' to 'dashboard.html' to respect GitHub Pages subfolder
                         setTimeout(() => {
-                            window.location.href = '/dashboard.html';
+                            window.location.href = 'dashboard.html';
                         }, 1500);
                     } else if (statusData.status === "failed") {
                         // Instantly catch Safaricom network failures
