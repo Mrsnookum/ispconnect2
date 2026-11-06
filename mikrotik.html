@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MikroTik | ISPConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- GLOBAL DASHBOARD STYLES --- */
+        :root {
+            --primary: #00B37E; --primary-light: #E6F7F2;
+            --blue: #007BFF; --blue-light: #E6F2FF;
+            --purple: #8B5CF6; --purple-light: #F3E8FF;
+            --text-dark: #1E293B; --text-muted: #64748B;
+            --bg: #F8FAFC; --card-bg: #FFFFFF;
+            --sidebar-width: 260px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.02);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background: var(--card-bg); border-right: 1px solid #E2E8F0; display: flex; flex-direction: column; padding: 24px 20px; z-index: 50; transition: left 0.3s ease; }
+        .logo { display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 32px; padding: 0 8px; }
+        .nav-menu { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        .nav-item:hover { background: #F8FAFC; color: var(--text-dark); }
+        .nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+        
+        .upgrade-card { background: linear-gradient(180deg, #022C22 0%, #064E3B 100%); border-radius: 12px; padding: 20px; color: #fff; margin-top: auto; position: relative; overflow: hidden; }
+        .upgrade-card::before { content: ''; position: absolute; top: -20px; left: -20px; right: -20px; height: 80px; background: radial-gradient(circle, rgba(0,179,126,0.3) 0%, transparent 70%); }
+        .upgrade-card h4 { font-size: 0.95rem; margin: 12px 0 6px; font-weight: 600; position: relative; z-index: 2;}
+        .upgrade-card p { font-size: 0.75rem; color: #A7F3D0; margin-bottom: 16px; line-height: 1.4; position: relative; z-index: 2;}
+        .btn-upgrade { background: var(--primary); color: #fff; border: none; padding: 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; width: 100%; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2;}
+
+        .mobile-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 40; display: none; backdrop-filter: blur(2px); }
+        .mobile-overlay.active { display: block; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        
+        /* HEADER */
+        .header { background: var(--bg); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; gap: 16px; }
+        .mobile-toggle { display: none; background: transparent; border: none; cursor: pointer; color: var(--text-dark); }
+        .search-container { display: flex; align-items: center; gap: 8px; background: var(--card-bg); padding: 10px 16px; border-radius: 8px; width: 100%; max-width: 350px; border: 1px solid #E2E8F0; }
+        .search-container input { border: none; outline: none; background: transparent; width: 100%; font-size: 0.85rem; color: var(--text-dark); }
+        
+        .header-profile { display: flex; align-items: center; gap: 24px; }
+        .notification { position: relative; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; }
+        .notification-dot { position: absolute; top: 0px; right: 2px; width: 8px; height: 8px; background: #EF4444; border-radius: 50%; border: 2px solid var(--bg); }
+        
+        .profile-dropdown-container { position: relative; display: inline-block; }
+        .profile-btn { display: flex; align-items: center; gap: 12px; background: transparent; border: none; cursor: pointer; padding: 4px; border-radius: 8px; transition: background 0.2s; }
+        .profile-btn:hover { background: #E2E8F0; }
+        .avatar { width: 36px; height: 36px; background: var(--blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; flex-shrink: 0; }
+        .profile-info { text-align: left; }
+        .profile-name { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+        .profile-role { font-size: 0.7rem; color: var(--text-muted); }
+        
+        .profile-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; width: 220px; background: var(--card-bg); border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: var(--shadow-md); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s ease; z-index: 100; padding: 8px 0; }
+        .profile-dropdown.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; width: 100%; border: none; background: transparent; color: var(--text-dark); font-size: 0.85rem; font-weight: 500; cursor: pointer; text-align: left; transition: background 0.2s; }
+        .dropdown-item:hover { background: #F8FAFC; }
+        .dropdown-item.text-red { color: #EF4444; }
+        .dropdown-item.text-red:hover { background: #FEF2F2; }
+        .dropdown-divider { height: 1px; background: #E2E8F0; margin: 4px 0; }
+
+        .dashboard-container { padding: 0 32px 32px; display: flex; flex-direction: column; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .card { background: var(--card-bg); border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: var(--shadow-sm); overflow: hidden; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+        .page-header p { color: var(--text-muted); font-size: 0.85rem; }
+        
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px; }
+        .kpi-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+        .kpi-val { font-size: 1.75rem; font-weight: 700; color: var(--text-dark); }
+
+        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #E2E8F0; }
+        .filter-tabs { display: flex; gap: 8px; }
+        .filter-btn { padding: 6px 16px; border-radius: 99px; border: 1px solid #E2E8F0; background: transparent; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .filter-btn:hover { background: #F1F5F9; }
+        .filter-btn.active { background: var(--text-dark); color: #fff; border-color: var(--text-dark); }
+        .filter-btn[data-filter="onboarding"].active { background: #F59E0B; color: #fff; border-color: #F59E0B; }
+        
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); padding: 12px 20px; border-bottom: 1px solid #F1F5F9; white-space: nowrap; }
+        td { padding: 14px 20px; font-size: 0.85rem; color: var(--text-dark); border-bottom: 1px solid #F8FAFC; vertical-align: middle; white-space: nowrap; }
+        .table-responsive { overflow-x: auto; width: 100%; }
+
+        .btn-secondary { background: #fff; border: 1px solid #E2E8F0; padding: 10px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: var(--text-dark); transition: background 0.2s; }
+        .btn-secondary:hover { background: #F8FAFC; }
+        .btn-primary { background: var(--blue); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; transition: background 0.2s; }
+        .btn-primary:hover { background: #0056b3; }
+
+        /* TOAST NOTIFICATION */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 9999; }
+        .toast { background: #1E293B; color: #fff; padding: 16px 20px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; font-size: 0.85rem; font-weight: 500; opacity: 0; transform: translateY(20px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { border-left: 4px solid #EF4444; }
+        .toast.success { border-left: 4px solid var(--primary); }
+
+        /* --- BIGGER & CENTERED WIZARD STYLES --- */
+        .form-section { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 24px; margin-bottom: 24px; }
+        .form-section h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); display: flex; align-items: center; gap: 8px; justify-content: inherit; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+        .form-group input { padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 1rem; outline: none; transition: border 0.2s; width: 100%; max-width: 500px; text-align: center; }
+        .form-group input:focus { border-color: var(--blue); }
+
+        .stepper-container { display: flex; align-items: center; justify-content: space-between; margin: 16px auto 40px; position: relative; max-width: 700px; width: 100%; }
+        .step { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-muted); transition: 0.3s; z-index: 2; position: relative; width: 33.33%; }
+        .step-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; border: 2px solid #E2E8F0; transition: all 0.3s; }
+        .step.active { color: var(--primary); font-weight: 600; }
+        .step.active .step-circle { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        .stepper-line { position: absolute; top: 18px; left: 16%; right: 16%; height: 2px; background: #E2E8F0; z-index: 1; }
+
+        .terminal-container { background: #0F172A; border-radius: 8px; padding: 20px; margin: 16px 0; display: flex; justify-content: space-between; align-items: center; gap: 16px; text-align: left; }
+        .terminal-container code { color: #10B981; font-family: monospace; font-size: 0.9rem; word-break: break-all; line-height: 1.6; flex: 1; margin: 0; }
+        .btn-copy { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 10px; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .btn-copy:hover { background: rgba(255,255,255,0.2); }
+
+        .polling-status { display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--text-dark); font-size: 0.9rem; margin-top: 24px; padding: 16px; background: transparent; font-weight: 500; }
+        .spinner { width: 20px; height: 20px; border: 3px solid #CBD5E1; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; }
+            .sidebar.open { left: 0; }
+            .header { padding: 16px; }
+            .mobile-toggle { display: block; }
+            .dashboard-container { padding: 0 16px 16px; }
+            .profile-info, .search-container { display: none; }
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .page-header button { width: 100%; justify-content: center; }
+            .stepper-line { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- MOBILE OVERLAY -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <i data-lucide="wifi" stroke-width="3"></i> ISPConnect
+        </div>
+        <nav class="nav-menu">
+            <a href="dashboard.html" class="nav-item"><i data-lucide="home" width="18"></i> Dashboard</a>
+            <a href="mikrotik.html" class="nav-item active"><i data-lucide="hard-drive" width="18"></i> MikroTik</a>
+            <a href="customers.html" class="nav-item"><i data-lucide="users" width="18"></i> Customers</a>
+            <a href="packages.html" class="nav-item"><i data-lucide="package" width="18"></i> Packages</a>
+            <a href="payments.html" class="nav-item"><i data-lucide="file-text" width="18"></i> Payments</a>
+            <a href="subscriptions.html" class="nav-item"><i data-lucide="refresh-cw" width="18"></i> Subscriptions</a>
+            <a href="sessions.html" class="nav-item"><i data-lucide="monitor-play" width="18"></i> Sessions</a>
+            <a href="reports.html" class="nav-item"><i data-lucide="bar-chart-2" width="18"></i> Reports</a>
+            <a href="sms.html" class="nav-item"><i data-lucide="message-square" width="18"></i> SMS</a>
+            <a href="settings.html" class="nav-item"><i data-lucide="settings" width="18"></i> Settings</a>
+        </nav>
+
+        <div class="upgrade-card">
+            <i data-lucide="wifi" style="color: var(--primary); margin-bottom: 4px;"></i>
+            <h4>Fast. Reliable.<br>Connected.</h4>
+            <p>Powering your internet business with smart billing solutions.</p>
+            <button class="btn-upgrade">Upgrade Plan <i data-lucide="arrow-right" width="14"></i></button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- HEADER -->
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="mobile-toggle" id="mobileToggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="search-container">
+                    <i data-lucide="search" width="16" color="#94A3B8"></i>
+                    <input type="text" placeholder="Search routers, identity...">
+                </div>
+            </div>
+            
+            <div class="header-profile">
+                <div class="notification">
+                    <i data-lucide="bell" width="20"></i>
+                    <div class="notification-dot"></div>
+                </div>
+                
+                <div class="profile-dropdown-container">
+                    <button class="profile-btn" id="profileToggleBtn">
+                        <div class="avatar" id="navAvatar">SN</div>
+                        <div class="profile-info">
+                            <div class="profile-name" id="navName">snookum</div>
+                            <div class="profile-role">Administrator</div>
+                        </div>
+                        <i data-lucide="chevron-down" width="16" color="#94A3B8"></i>
+                    </button>
+                    
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <button class="dropdown-item"><i data-lucide="user" width="16"></i> My Profile</button>
+                        <button class="dropdown-item"><i data-lucide="settings" width="16"></i> Settings</button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item text-red" id="logoutBtn"><i data-lucide="log-out" width="16"></i> Sign Out</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD CONTAINER -->
+        <div class="dashboard-container" style="padding: 32px;">
+            
+            <!-- VIEW 1: ROUTERS DASHBOARD -->
+            <div id="routers-dashboard-view">
+                
+                <div class="page-header">
+                    <div>
+                        <h1>Routers.</h1>
+                        <p>Manage your MikroTik routers, configurations, and network access.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-link-mikrotik">
+                        <i data-lucide="plus" width="16"></i> Link a MikroTik
+                    </button>
+                </div>
+
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="card" style="padding: 16px 20px;">
+                        <div class="kpi-label">Total Routers</div>
+                        <div class="kpi-val">0</div>
+                    </div>
+                    <div class="card" style="padding: 16px 20px;">
+                        <div class="kpi-label">Online</div>
+                        <div class="kpi-val" style="color: var(--primary);">0</div>
+                    </div>
+                    <div class="card" style="padding: 16px 20px;">
+                        <div class="kpi-label">Offline</div>
+                        <div class="kpi-val" style="color: var(--text-muted);">0</div>
+                    </div>
+                    <div class="card" style="padding: 16px 20px;">
+                        <div class="kpi-label">Onboarding</div>
+                        <div class="kpi-val" style="color: #F59E0B;">0</div>
+                    </div>
+                </div>
+
+                <!-- MAIN TABLE CARD -->
+                <div class="card" style="padding: 0;">
+                    <div class="toolbar">
+                        <div class="filter-tabs">
+                            <button class="filter-btn active" data-filter="All">All (0)</button>
+                            <button class="filter-btn" data-filter="Online">Online (0)</button>
+                            <button class="filter-btn" data-filter="Offline">Offline (0)</button>
+                            <button class="filter-btn" data-filter="Onboarding">Onboarding (0)</button>
+                        </div>
+                        <div class="search-container" style="max-width: 250px; padding: 8px 12px; display: flex;">
+                            <i data-lucide="search" width="14" color="#94A3B8"></i>
+                            <input type="text" id="searchRouters" placeholder="Filter by name..." style="font-size: 0.75rem;">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table style="margin-bottom: 12px;">
+                            <thead>
+                                <tr>
+                                    <th>Added</th>
+                                    <th>Router Name</th>
+                                    <th>Identity</th>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="routers-tbody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                                        <i data-lucide="hard-drive" width="40" style="margin-bottom: 12px; opacity: 0.5;"></i>
+                                        <p id="table-empty-text" style="margin: 0; font-size: 0.9rem;">No routers found. Click "Link a MikroTik" to get started.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: ONBOARDING WIZARD -->
+            <div id="onboarding-wizard-view" style="display: none;">
+                
+                <div class="page-header">
+                    <div>
+                        <h1>Add MikroTik Device.</h1>
+                        <p>Connect your router to enable automated provisioning.</p>
+                    </div>
+                    <button class="btn-secondary" id="btn-cancel-onboarding" style="display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="arrow-left" width="16"></i> Cancel & Return
+                    </button>
+                </div>
+
+                <!-- BIGGER CENTERED CARD -->
+                <div class="card" style="padding: 40px; max-width: 900px; margin: 0 auto; width: 100%;">
+                    
+                    <!-- Stepper -->
+                    <div class="stepper-container">
+                        <div class="stepper-line"></div>
+                        <div class="step active" id="step-1-indicator">
+                            <div class="step-circle">1</div>
+                            <span>Connection</span>
+                        </div>
+                        <div class="step" id="step-2-indicator">
+                            <div class="step-circle">2</div>
+                            <span>Device Details</span>
+                        </div>
+                        <div class="step" id="step-3-indicator">
+                            <div class="step-circle">3</div>
+                            <span>Service Setup</span>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1 -->
+                    <div id="wizard-step-1" style="display: block;">
+                        <div class="form-section" style="max-width: 550px; margin: 0 auto 32px; text-align: center;">
+                            <h3 style="justify-content: center;"><i data-lucide="hard-drive" width="18" color="var(--blue)"></i> Router Identity</h3>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">This will be used to identify the router in your dashboard.</p>
+                            
+                            <div class="form-group" style="align-items: center;">
+                                <label style="margin-bottom: 4px;">MIKROTIK IDENTITY *</label>
+                                <input type="text" id="mikrotik-identity" placeholder="e.g., Main_Router_Kisii" autocomplete="off">
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: center;">
+                            <button class="btn-primary" id="btn-next-step-1" style="padding: 12px 24px;">Generate Command <i data-lucide="arrow-right" width="18"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div id="wizard-step-2" style="display: none;">
+                        <div class="form-section" style="max-width: 700px; margin: 0 auto 32px; text-align: center;">
+                            <h3 style="justify-content: center;"><i data-lucide="terminal" width="18" color="var(--purple)"></i> Provisioning Command</h3>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Copy the command below and paste it into your MikroTik's WinBox terminal.</p>
+                            
+                            <div class="terminal-container">
+                                <code id="provisioning-command-text">Generating secure command...</code>
+                                <button class="btn-copy" id="btn-copy-command" title="Copy to clipboard">
+                                    <i data-lucide="copy" width="20"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="polling-status">
+                                <div class="spinner"></div>
+                                <span id="polling-text">Waiting for router to connect...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Service Setup -->
+                    <div id="wizard-step-3" style="display: none;">
+                        <div class="success-banner" style="margin-bottom: 24px; padding: 12px 16px; background: var(--primary-light); border-left: 4px solid var(--primary); border-radius: 6px; display: flex; align-items: center; gap: 12px;">
+                            <div style="background: var(--primary); color: #fff; padding: 4px; border-radius: 50%; display: flex;">
+                                <i data-lucide="check" width="16"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 0.9rem; margin: 0 0 2px 0; color: var(--text-dark);">Router Linked Successfully</h3>
+                                <p style="font-size: 0.8rem; margin: 0; color: var(--text-muted);">The device is communicating with the server. Configure your Hotspot below.</p>
+                            </div>
+                        </div>
+
+                        <div class="form-section" style="max-width: 600px; margin: 0 auto 32px; text-align: left;">
+                            <h3><i data-lucide="wifi" width="16" color="var(--blue)"></i> Hotspot Configuration</h3>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group" style="grid-column: 1 / -1;">
+                                    <label>HOTSPOT INTERFACE *</label>
+                                    <select id="hotspot-interface" style="padding: 10px 12px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 0.85rem; outline: none; width: 100%; font-family: inherit;">
+                                        <!-- Options will be populated dynamically by JS -->
+                                    </select>
+                                    <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">The port where your access points/switches are connected.</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>NETWORK IP RANGE *</label>
+                                    <input type="text" id="hotspot-ip" value="10.0.0.1/24" placeholder="e.g., 10.0.0.1/24" style="text-align: left;">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>DNS NAME</label>
+                                    <input type="text" id="hotspot-dns" value="login.ispconnect.co.ke" placeholder="e.g., login.ispconnect.local" style="text-align: left;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: center; gap: 12px;">
+                            <button class="btn-secondary" id="btn-back-step-2">Back</button>
+                            <button class="btn-primary" id="btn-deploy-services" style="padding: 12px 24px;">Deploy Services & Finish <i data-lucide="rocket" width="18"></i></button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="mikrotik.js"></script>
+</body>
+</html>

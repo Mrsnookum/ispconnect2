@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Connect | ISPConnect Wi-Fi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #00B37E; --primary-light: #E6F7F2; --primary-dark: #009065;
+            --text-dark: #1E293B; --text-muted: #64748B;
+            --bg: #F1F5F9; --card-bg: #FFFFFF; --border: #E2E8F0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background: var(--bg); display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; color: var(--text-dark); padding: 20px;
+        }
+
+        /* RESPONSIVE SPLIT LAYOUT */
+        .portal-wrapper {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            display: flex;
+            overflow: hidden;
+        }
+
+        .portal-brand {
+            background: linear-gradient(135deg, #022C22 0%, var(--primary-dark) 100%);
+            color: #fff;
+            padding: 48px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .portal-brand h1 { font-size: 1.75rem; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .portal-brand p { color: #A7F3D0; font-size: 1rem; line-height: 1.6; }
+        .features { margin-top: 40px; display: flex; flex-direction: column; gap: 16px; }
+        .feature-item { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; }
+
+        .portal-form-section {
+            flex: 1.2;
+            padding: 48px;
+            background: #fff;
+        }
+
+        /* FORM ELEMENTS */
+        .section-title { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+        
+        .package-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+        .pkg-btn {
+            background: #F8FAFC; border: 2px solid var(--border); border-radius: 12px; padding: 16px 12px;
+            text-align: center; cursor: pointer; transition: all 0.2s;
+        }
+        .pkg-btn:hover { border-color: #CBD5E1; }
+        .pkg-btn.selected { border-color: var(--primary); background: var(--primary-light); }
+        .pkg-price { font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+        .pkg-name { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+
+        .input-group { position: relative; margin-bottom: 16px; }
+        .input-group input {
+            width: 100%; padding: 16px 16px 16px 48px; border: 2px solid var(--border);
+            border-radius: 12px; font-size: 1rem; font-weight: 600; outline: none; background: #F8FAFC; transition: 0.2s;
+        }
+        .input-group input:focus { border-color: var(--primary); background: #fff; }
+        .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+        .btn {
+            width: 100%; padding: 16px; border-radius: 12px; font-size: 0.9rem; font-weight: 700;
+            border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-dark); }
+        .btn-outline:hover { background: #F8FAFC; }
+
+        .divider { display: flex; align-items: center; text-align: center; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; margin: 32px 0; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
+        .divider::before { margin-right: 12px; } .divider::after { margin-left: 12px; }
+
+        /* TOAST */
+        .toast {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: #1E293B; color: #fff; padding: 16px 24px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 12px;
+            opacity: 0; transition: all 0.3s; z-index: 1000; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        
+        #mtik-login-form { display: none; }
+
+        /* MOBILE MEDIA QUERY */
+        @media (max-width: 768px) {
+            body { padding: 0; align-items: flex-start; }
+            .portal-wrapper { flex-direction: column; border-radius: 0; min-height: 100vh; box-shadow: none; }
+            .portal-brand { padding: 32px 24px; flex: none; }
+            .features { display: none; } /* Hide extra text on mobile to save space */
+            .portal-form-section { padding: 32px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="portal-wrapper">
+        <!-- BRANDING SIDE -->
+        <div class="portal-brand">
+            <div>
+                <h1><i data-lucide="wifi" stroke-width="3"></i> ISPConnect</h1>
+                <p>Welcome to our high-speed, reliable hotspot network. Purchase a plan to get connected instantly.</p>
+            </div>
+            <div class="features">
+                <div class="feature-item"><i data-lucide="zap" width="20" color="#A7F3D0"></i> Instant M-Pesa Activation</div>
+                <div class="feature-item"><i data-lucide="shield-check" width="20" color="#A7F3D0"></i> Secure Connection</div>
+                <div class="feature-item"><i data-lucide="gauge" width="20" color="#A7F3D0"></i> Uncapped Speeds</div>
+            </div>
+        </div>
+
+        <!-- FORM SIDE -->
+        <div class="portal-form-section">
+            
+            <div class="section-title">1. Choose Access Plan</div>
+            <div class="package-grid" id="packagesContainer">
+                <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px;">Loading packages...</div>
+            </div>
+
+            <div class="section-title">2. Pay via M-Pesa</div>
+            <div class="input-group">
+                <i data-lucide="phone" width="20" class="input-icon"></i>
+                <input type="tel" id="phoneInput" placeholder="07XX XXX XXX" autocomplete="tel">
+            </div>
+            <button class="btn btn-primary" id="btnPay">
+                <i data-lucide="smartphone" width="18"></i> Request M-Pesa PIN
+            </button>
+
+            <div class="divider">OR USE EXISTING VOUCHER</div>
+
+            <div class="input-group">
+                <i data-lucide="key" width="20" class="input-icon"></i>
+                <input type="text" id="voucherInput" placeholder="Enter Voucher Code" style="text-transform: uppercase;">
+            </div>
+            <button class="btn btn-outline" id="btnConnect">
+                Connect Device <i data-lucide="arrow-right" width="18"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- MIKROTIK HIDDEN FORM -->
+    <form id="mtik-login-form" action="$(link-login-only)" method="post">
+        <input type="hidden" name="dst" value="$(link-orig)" />
+        <input type="hidden" name="popup" value="true" />
+        <input type="text" name="username" id="mtik-user" />
+        <input type="password" name="password" id="mtik-pass" />
+    </form>
+
+    <div class="toast" id="toastMsg"></div>
+
+    <script src="portal.js"></script>
+</body>
+</html>

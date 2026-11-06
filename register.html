@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate System | ISPConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* BASE & TYPOGRAPHY */
+        :root{--primary:#10B981;--primary-dark:#059669;--bg:#F8FAFC;--card-bg:#FFFFFF;--text-dark:#111827;--text-muted:#6B7280;--border:#E5E7EB;--shadow:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04);}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+        body{background-color:var(--bg);color:var(--text-dark);line-height:1.5;display:flex;flex-direction:column;min-height:100vh;}
+        a{text-decoration:none;color:var(--primary);font-weight:500;cursor:pointer;}
+        
+        /* HEADER */
+        header{background:var(--card-bg);padding:20px 24px;border-bottom:1px solid var(--border);text-align:center;flex-shrink:0;}
+        .logo{font-size:1.25rem;font-weight:800;color:var(--text-dark);display:flex;align-items:center;justify-content:center;gap:8px;}
+        .logo svg{color:var(--primary);}
+        
+        /* MAIN LAYOUT & CARD (Centered & Bigger) */
+        .main-wrapper{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;}
+        .register-container{width:100%;max-width:650px;}
+        .card{background:var(--card-bg);border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--border);padding:48px 40px;}
+        
+        /* TABS (For switching Login/Register) */
+        .tabs {display:flex; border-bottom:2px solid var(--border); margin-bottom:32px;}
+        .tab-btn {flex:1; padding:16px; text-align:center; background:none; border:none; font-size:1.1rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all 0.3s;}
+        .tab-btn.active {color:var(--primary-dark); border-bottom:3px solid var(--primary); margin-bottom:-2px;}
+
+        /* VIEW CONTAINERS */
+        .view-section {display:none; animation:fadeIn 0.3s ease-in-out;}
+        .view-section.active {display:block;}
+
+        /* STEPPER */
+        .stepper{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;}
+        .step{display:flex;flex-direction:column;align-items:center;gap:10px;flex:1;position:relative;z-index:2;}
+        .step-circle{width:36px;height:36px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);transition:all 0.3s;font-size:0.9rem;}
+        .step-label{font-size:0.8rem;font-weight:600;color:var(--text-muted);transition:all 0.3s;text-transform:uppercase;letter-spacing:0.05em;}
+        .step.active .step-circle{background:var(--primary);border-color:var(--primary);color:#FFF;box-shadow:0 0 0 4px rgba(16,185,129,0.15);}
+        .step.active .step-label{color:var(--text-dark);}
+        .step-line{flex:1;height:2px;background:var(--border);margin:0 -15px;position:relative;top:-12px;z-index:1;}
+        
+        /* FORMS & INPUTS */
+        .step-content{display:none;animation:fadeIn 0.3s ease-in-out;}
+        .step-content.active{display:block;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+        h3{font-size:1.75rem;font-weight:800;margin-bottom:8px;letter-spacing:-0.02em;}
+        .subtitle{color:var(--text-muted);font-size:1rem;margin-bottom:32px;line-height:1.5;}
+        .form-group{margin-bottom:24px;}
+        .form-group label{display:block;margin-bottom:8px;font-weight:600;font-size:0.95rem;}
+        .form-group input{width:100%;padding:16px;border:1px solid var(--border);border-radius:10px;font-family:inherit;background:#F9FAFB;transition:all 0.2s;font-size:1rem;}
+        .form-group input:focus{outline:none;border-color:var(--primary);background:#FFF;box-shadow:0 0 0 3px rgba(16,185,129,0.1);}
+        .text-center{text-align:center;}
+        .tracking-widest{letter-spacing:0.25em;}
+        .text-2xl{font-size:1.75rem;font-weight:700;}
+        .highlight{font-weight:600;color:var(--text-dark);}
+        
+        /* BUTTONS */
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:16px 24px;border-radius:10px;font-weight:600;cursor:pointer;transition:all 0.3s ease;border:none;width:100%;font-size:1.05rem;}
+        .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 6px rgba(16,185,129,0.25);}
+        .btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);}
+        .btn-primary:disabled{opacity:0.7;cursor:not-allowed;transform:none;}
+        .btn-secondary{background:transparent;color:var(--text-muted);margin-top:16px;padding:10px;}
+        .btn-secondary:hover{color:var(--text-dark);}
+        
+        /* PAYMENT BOX */
+        .payment-box{background:#F9FAFB;border:1px solid var(--border);border-radius:12px;padding:32px 24px;text-align:center;margin-bottom:24px;}
+        .payment-box span{display:block;color:var(--text-muted);font-size:0.875rem;font-weight:700;margin-bottom:8px;letter-spacing:0.05em;text-transform:uppercase;}
+        .payment-box h2{font-size:3rem;color:var(--primary-dark);font-weight:800;letter-spacing:-0.03em;}
+        .payhero-badge{display:inline-flex;align-items:center;gap:6px;background:#ECFDF5;color:#065F46;padding:6px 12px;border-radius:99px;font-size:0.8rem;font-weight:600;margin-top:12px;}
+
+        /* SPINNER */
+        .spinner{border:3px solid rgba(255,255,255,0.3);border-radius:50%;border-top:3px solid #FFF;width:20px;height:20px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+
+        /* CUSTOM MODAL */
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,39,0.7);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:center;z-index:999;opacity:0;visibility:hidden;transition:all 0.3s;}
+        .modal-overlay.active{opacity:1;visibility:visible;}
+        .modal-box{background:#FFF;padding:40px;border-radius:16px;width:90%;max-width:420px;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);transform:translateY(20px);transition:all 0.3s;}
+        .modal-overlay.active .modal-box{transform:translateY(0);}
+        .modal-icon{width:64px;height:64px;background:#FEE2E2;color:#DC2626;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;}
+        .modal-icon.success{background:#D1FAE5;color:var(--primary-dark);}
+        .modal-box h3{font-size:1.5rem;margin-bottom:12px;font-weight:700;color:var(--text-dark);}
+        .modal-box p{color:var(--text-muted);margin-bottom:32px;line-height:1.6;}
+
+        /* MOBILE ADJUSTMENTS */
+        @media (max-width: 600px) {
+            .card{padding:32px 20px;}
+            .step-label{display:none;} 
+            .stepper{margin-bottom:32px;}
+            h3{font-size:1.5rem;}
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+            ISPConnect
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <div class="register-container">
+            <div class="card">
+                
+                <!-- TABS -->
+                <div class="tabs">
+                    <button class="tab-btn active" id="tabLogin" onclick="switchView('login')">Login</button>
+                    <button class="tab-btn" id="tabRegister" onclick="switchView('register')">Register ISP</button>
+                </div>
+
+                <!-- LOGIN VIEW -->
+                <div class="view-section active" id="viewLogin">
+                    <h3>Admin Login</h3>
+                    <p class="subtitle">Access your ISP dashboard.</p>
+                    
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="loginEmail" placeholder="admin@company.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••">
+                    </div>
+                    
+                    <button class="btn btn-primary" id="btnLogin" onclick="processLogin()">
+                        <div class="spinner" id="spinLogin"></div> <span id="textLogin">Sign In</span>
+                    </button>
+                </div>
+
+                <!-- REGISTER VIEW -->
+                <div class="view-section" id="viewRegister">
+                    <!-- STEPPER -->
+                    <div class="stepper">
+                        <div class="step active" id="stepIndicator1">
+                            <div class="step-circle">1</div>
+                            <div class="step-label">Email</div>
+                        </div>
+                        <div class="step-line"></div>
+                        <div class="step" id="stepIndicator2">
+                            <div class="step-circle">2</div>
+                            <div class="step-label">Business</div>
+                        </div>
+                        <div class="step-line"></div>
+                        <div class="step" id="stepIndicator3">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">Security</div>
+                        </div>
+                        <div class="step-line"></div>
+                        <div class="step" id="stepIndicator4">
+                            <div class="step-circle">4</div>
+                            <div class="step-label">Activate</div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1: EMAIL -->
+                    <div class="step-content active" id="stepContent1">
+                        <h3>System Setup</h3>
+                        <p class="subtitle">Enter your master admin email to begin.</p>
+                        <div class="form-group">
+                            <label>Admin Email</label>
+                            <input type="email" id="regEmail" placeholder="admin@yourisp.com">
+                        </div>
+                        <button class="btn btn-primary" id="btnEmail" onclick="sendEmailCode()">
+                            <div class="spinner" id="spinEmail"></div> <span id="textEmail">Send Verification Code</span>
+                        </button>
+                        <div style="text-align:center;margin-top:24px;font-size:0.95rem;">
+                            Already activated? <a onclick="switchView('login')">Login here</a>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1.5: EMAIL VERIFY -->
+                    <div class="step-content" id="stepContent1-verify">
+                        <h3>Verify Email</h3>
+                        <p class="subtitle">Enter the 6-digit code sent to <br><span id="displayEmail" class="highlight"></span></p>
+                        <div class="form-group">
+                            <input type="text" id="emailVerifyCode" placeholder="000000" maxlength="6" class="text-center tracking-widest text-2xl">
+                        </div>
+                        <button class="btn btn-primary" id="btnVerifyEmail" onclick="verifyEmailCode()">Verify Code</button>
+                        <button class="btn btn-secondary" onclick="showStep(1, false)">Change Email</button>
+                    </div>
+
+                    <!-- STEP 2: BUSINESS & PHONE -->
+                    <div class="step-content" id="stepContent2">
+                        <h3>Business Details</h3>
+                        <p class="subtitle">What is the name of your ISP?</p>
+                        <div class="form-group">
+                            <label>Company / ISP Name</label>
+                            <input type="text" id="companyName" placeholder="e.g. FastNet Kenya">
+                        </div>
+                        <div class="form-group">
+                            <label>Admin Phone Number</label>
+                            <input type="tel" id="phoneNumber" placeholder="07XXXXXXXX" maxlength="10">
+                        </div>
+                        
+                        <!-- Disabled Brightscale SMS Feature (Preserved for future use) -->
+                        <div class="form-group" style="opacity: 0.6; pointer-events: none; background: #F9FAFB; padding: 16px; border-radius: 12px; border: 1px dashed var(--border); margin-bottom: 24px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                                <label style="margin:0; color:var(--text-muted);">SMS Verification</label>
+                                <span style="background:#E5E7EB; color:#6B7280; font-size: 0.7rem; font-weight: 600; padding: 4px 8px; border-radius: 99px;">Offline: Brightscale Notify</span>
+                            </div>
+                            <button class="btn" id="btnPhone" style="width:100%; background:#E5E7EB; color:#9CA3AF; cursor:not-allowed;" disabled>
+                                <div class="spinner" id="spinPhone"></div> <span id="textPhone">Send SMS Code</span>
+                            </button>
+                        </div>
+
+                        <!-- Bypass button to skip SMS and continue to Step 3 -->
+                        <button class="btn btn-primary" onclick="submitBusiness()">Continue to Security</button>
+                    </div>
+
+                    <!-- STEP 2.5: SMS VERIFY (Kept in DOM but skipped) -->
+                    <div class="step-content" id="stepContent2-verify">
+                        <h3>Verify Phone Number</h3>
+                        <p class="subtitle">Enter the 6-digit code sent via SMS to <br><span id="displayPhone" class="highlight"></span></p>
+                        <div class="form-group">
+                            <input type="text" id="smsVerifyCode" placeholder="000000" maxlength="6" class="text-center tracking-widest text-2xl">
+                        </div>
+                        <button class="btn btn-primary" id="btnVerifySms" onclick="verifySmsCode()">Verify Code</button>
+                        <button class="btn btn-secondary" onclick="showStep(2, false)">Change Number</button>
+                    </div>
+
+                    <!-- STEP 3: SECURITY -->
+                    <div class="step-content" id="stepContent3">
+                        <h3>Master Password</h3>
+                        <p class="subtitle">Create the login credentials for your dashboard.</p>
+                        <div class="form-group">
+                            <label>Admin Full Name</label>
+                            <input type="text" id="fullName" placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="password" placeholder="Min 8 characters">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="confirmPassword" placeholder="Repeat password">
+                        </div>
+                        <button class="btn btn-primary" onclick="submitSecurity()">Continue to Activation</button>
+                    </div>
+
+                    <!-- STEP 4: PAYMENT (PayHero) -->
+                    <div class="step-content" id="stepContent4">
+                        <h3>System Activation</h3>
+                        <p class="subtitle">Pay the one-time setup fee to unlock your ISP dashboard.</p>
+                        
+                        <div class="payment-box">
+                            <span>ACTIVATION FEE</span>
+                            <h2>KES 200</h2>
+                            <div class="payhero-badge">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                Powered by PayHero
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>M-Pesa Number</label>
+                            <input type="tel" id="paymentPhone" maxlength="10">
+                            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">You will receive an STK push on this number.</div>
+                        </div>
+
+                        <button class="btn btn-primary" id="btnPay" onclick="initiatePayment()">
+                            <div class="spinner" id="spinPay"></div> <span id="payText">Pay with PayHero</span>
+                        </button>
+                    </div>
+                </div> <!-- End Register View -->
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM MODAL -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box">
+            <div class="modal-icon" id="modalIcon">
+                <!-- Icon injected by JS -->
+            </div>
+            <h3 id="modalTitle">Notice</h3>
+            <p id="modalMessage">Message content goes here.</p>
+            <button class="btn btn-primary" style="width:100%;" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script src="register.js"></script>
+</body>
+</html>

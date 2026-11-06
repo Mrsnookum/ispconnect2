@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISPConnect | Smart Wi-Fi. Simple Billing.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* TIGHTLY COMPRESSED CSS */
+        :root{--primary:#10B981;--primary-dark:#059669;--bg:#F8FAFC;--card-bg:#FFFFFF;--text-dark:#111827;--text-muted:#6B7280;--border:#E5E7EB;--shadow:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+        body{background-color:var(--bg);color:var(--text-dark);line-height:1.5;overflow-x:hidden;}
+        a{text-decoration:none;color:inherit;} ul{list-style:none;}
+        .container{max-width:1200px;margin:0 auto;padding:0 24px;}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.3s ease;border:none;font-size:1rem;}
+        .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 6px rgba(16,185,129,0.25);}
+        .btn-primary:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 6px 12px rgba(16,185,129,0.3);}
+        .btn-outline{background:transparent;color:var(--text-dark);}
+        .btn-outline:hover{color:var(--primary);}
+        .status-badge{font-size:0.75rem;padding:4px 12px;border-radius:99px;font-weight:600;display:inline-block;}
+        .badge-green{background:#D1FAE5;color:#065F46;} .badge-blue{background:#DBEAFE;color:#1E40AF;} .badge-purple{background:#F3E8FF;color:#6B21A8;}
+        
+        /* NAVBAR */
+        nav{position:fixed;top:0;width:100%;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);z-index:100;border-bottom:1px solid var(--border);transition:all 0.3s;}
+        .nav-container{display:flex;justify-content:space-between;align-items:center;height:72px;}
+        .logo{font-size:1.5rem;font-weight:800;color:var(--text-dark);display:flex;align-items:center;gap:8px;}
+        .logo svg{color:var(--primary);}
+        .nav-menu{display:flex;align-items:center;gap:32px;font-weight:500;}
+        .nav-links{display:flex;gap:32px;}
+        .nav-links a:hover{color:var(--primary);}
+        .nav-actions{display:flex;align-items:center;gap:24px;}
+        .nav-actions svg{width:18px;height:18px;}
+        .mobile-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--text-dark);}
+        
+        /* HERO */
+        .hero{padding:160px 0 80px;display:flex;align-items:center;justify-content:space-between;gap:40px;}
+        .hero-content{flex:0 0 50%;max-width:580px;z-index:2;}
+        .hero-tag{display:inline-flex;align-items:center;gap:8px;color:var(--text-muted);font-size:0.875rem;font-weight:600;margin-bottom:24px;}
+        .hero-tag span{width:8px;height:8px;background:var(--primary);border-radius:50%;}
+        .hero h1{font-size:4rem;font-weight:800;line-height:1.1;margin-bottom:24px;letter-spacing:-0.03em;}
+        .hero h1 span{color:var(--primary);}
+        .hero p{font-size:1.125rem;color:var(--text-muted);margin-bottom:40px;line-height:1.6;}
+        .hero-actions{display:flex;gap:20px;margin-bottom:48px;align-items:center;}
+        .hero-trust{display:flex;gap:32px;color:var(--text-muted);font-size:0.875rem;font-weight:500;}
+        .hero-trust div{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+        .hero-trust svg{width:20px;height:20px;color:var(--primary);}
+        .hero-visual{flex:1;position:relative;display:flex;justify-content:flex-end;align-items:center;z-index:1;}
+        .hero-visual img{width:140%;max-width:900px;height:auto;margin-right:-15%;filter:drop-shadow(0 25px 35px rgba(0,0,0,0.1));display:block;}
+        
+        /* SECTIONS */
+        .section{padding:100px 0;}
+        .section-header{text-align:center;margin-bottom:60px;}
+        .section-tag{color:var(--primary);font-weight:700;font-size:0.875rem;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:12px;display:block;}
+        .section-header h2{font-size:2.5rem;font-weight:800;margin-bottom:16px;letter-spacing:-0.02em;}
+        .section-header p{font-size:1.125rem;color:var(--text-muted);max-width:600px;margin:0 auto;}
+        
+        /* HOW IT WORKS */
+        .steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;position:relative;z-index:2;}
+        .step-card{background:var(--card-bg);padding:32px 24px;border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;flex-direction:column;}
+        .step-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+        .step-number{width:28px;height:28px;background:#D1FAE5;color:var(--primary-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.875rem;}
+        .step-icon{width:40px;height:40px;background:#F3F4F6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-dark);}
+        .step-card h3{font-size:1.125rem;margin-bottom:12px;font-weight:700;}
+        .step-card p{color:var(--text-muted);font-size:0.9rem;margin-bottom:24px;flex-grow:1;}
+        .step-card:not(:last-child)::after{content:'';position:absolute;width:24px;height:24px;right:-24px;top:50%;transform:translateY(-50%);background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2310B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>') no-repeat center;background-size:contain;z-index:1;}
+        
+        /* FEATURES */
+        .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
+        .feature-card{background:var(--card-bg);padding:40px 32px;border-radius:16px;border:1px solid var(--border);transition:all 0.3s;}
+        .feature-card:hover{box-shadow:var(--shadow);border-color:var(--primary);transform:translateY(-4px);}
+        .feature-icon-lg{width:48px;height:48px;background:#ECFDF5;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);margin-bottom:24px;}
+        .feature-card h3{font-size:1.25rem;margin-bottom:12px;font-weight:700;}
+        .feature-card p{color:var(--text-muted);font-size:0.95rem;line-height:1.6;}
+        
+        /* FAQ */
+        .faq-container{max-width:800px;margin:0 auto;}
+        .faq-item{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden;}
+        .faq-question{width:100%;text-align:left;padding:24px;background:none;border:none;font-size:1.125rem;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--text-dark);}
+        .faq-answer{padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s ease;color:var(--text-muted);line-height:1.6;}
+        .faq-item.active .faq-answer{padding:0 24px 24px;max-height:300px;}
+        .faq-item.active .faq-question{color:var(--primary);}
+        
+        /* CONTACT */
+        .contact-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:60px;}
+        .contact-info h3{font-size:1.5rem;margin-bottom:24px;font-weight:700;}
+        .contact-info p{color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+        .contact-form{background:var(--card-bg);padding:40px;border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--border);}
+        .form-group{margin-bottom:20px;}
+        .form-group label{display:block;margin-bottom:8px;font-weight:600;font-size:0.9rem;}
+        .form-group input,.form-group textarea{width:100%;padding:14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:#F9FAFB;transition:all 0.2s;}
+        .form-group input:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);background:#FFF;box-shadow:0 0 0 3px rgba(16,185,129,0.1);}
+        
+        /* FOOTER */
+        footer{background:var(--text-dark);color:#9CA3AF;padding:80px 0 40px;}
+        .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:60px;margin-bottom:60px;}
+        .footer-brand h2{color:#FFF;font-size:1.5rem;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+        .footer-brand svg{color:var(--primary);}
+        .footer-brand p{max-width:320px;line-height:1.6;}
+        .footer-links h4{color:#FFF;margin-bottom:24px;font-weight:600;}
+        .footer-links ul li{margin-bottom:12px;}
+        .footer-links ul li a{transition:color 0.2s;}
+        .footer-links ul li a:hover{color:#FFF;}
+        .footer-bottom{text-align:center;padding-top:32px;border-top:1px solid #374151;font-size:0.9rem;}
+        
+        /* MODAL */
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,39,0.7);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:center;z-index:999;opacity:0;visibility:hidden;transition:all 0.3s;}
+        .modal-overlay.active{opacity:1;visibility:visible;}
+        .modal-box{background:#FFF;padding:40px;border-radius:16px;width:90%;max-width:420px;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);transform:translateY(20px);transition:all 0.3s;}
+        .modal-overlay.active .modal-box{transform:translateY(0);}
+        .modal-icon{width:64px;height:64px;background:#D1FAE5;color:var(--primary-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;}
+        .modal-box h3{font-size:1.5rem;margin-bottom:12px;font-weight:700;color:var(--text-dark);}
+        .modal-box p{color:var(--text-muted);margin-bottom:32px;line-height:1.6;}
+        
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1024px) {
+            .hero{flex-direction:column;text-align:center;padding:120px 0 60px;gap:40px;}
+            .hero-content{max-width:100%;flex:1;}
+            .hero-tag{margin:0 auto 24px;}
+            .hero-actions{justify-content:center;}
+            .hero-trust{justify-content:center;flex-wrap:wrap;}
+            .hero-visual{width:100%;justify-content:center;}
+            .hero-visual img{width:100%;max-width:700px;margin-right:0;} /* Reset oversized image for mobile */
+            .steps-grid, .features-grid{grid-template-columns:repeat(2,1fr);}
+            .step-card:not(:last-child)::after{display:none;}
+        }
+        @media (max-width: 768px) {
+            .section{padding:60px 0;}
+            .hero h1{font-size:2.5rem;}
+            .hero-actions{flex-direction:column;width:100%;}
+            .hero-actions .btn{width:100%;}
+            .steps-grid, .features-grid, .contact-grid, .footer-grid{grid-template-columns:1fr;}
+            
+            /* Mobile Navigation Drawer */
+            .mobile-toggle{display:block;}
+            .nav-menu{position:fixed;top:72px;left:0;width:100%;background:#FFF;flex-direction:column;padding:30px 24px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);clip-path:polygon(0 0,100% 0,100% 0,0 0);transition:all 0.3s ease-in-out;gap:24px;}
+            .nav-menu.active{clip-path:polygon(0 0,100% 0,100% 100%,0 100%);}
+            .nav-links{flex-direction:column;align-items:center;width:100%;gap:24px;}
+            .nav-actions{flex-direction:column;width:100%;gap:16px;}
+            .nav-actions .btn{width:100%;}
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                ISPConnect
+            </div>
+            
+            <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+
+            <div class="nav-menu" id="navMenu">
+                <ul class="nav-links">
+                    <li><a href="#home" class="nav-item">Home</a></li>
+                    <li><a href="#how-it-works" class="nav-item">How It Works</a></li>
+                    <li><a href="#features" class="nav-item">Features</a></li>
+                    <li><a href="#faq" class="nav-item">FAQ</a></li>
+                    <li><a href="#contact" class="nav-item">Contact</a></li>
+                </ul>
+                <div class="nav-actions">
+                    <a href="/register.html" class="nav-item" style="display:flex;align-items:center;gap:6px;color:var(--text-dark);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Login
+                    </a>
+                    <a href="/register.html" class="btn btn-primary nav-item">
+                        Get Started 
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="section" id="home">
+        <div class="container hero">
+            <div class="hero-content">
+                <div class="hero-tag"><span></span> Complete Wi-Fi Billing & Hotspot Management</div>
+                <h1>Smart Wi-Fi.<br><span>Simple Billing.</span></h1>
+                <p>Automate your Wi-Fi network, manage customers, handle payments, and grow your ISP business — all from one powerful platform.</p>
+                <div class="hero-actions">
+                    <a href="/register.html" class="btn btn-primary">
+                        Get Started 
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </a>
+                    <button id="demoBtn" class="btn btn-outline">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                        Watch Demo
+                    </button>
+                </div>
+                <div class="hero-trust">
+                    <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Secure Bank-grade</div>
+                    <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Fast Setup</div>
+                    <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg> 24/7 Support</div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <img src="hero.png" alt="ISPConnect Dashboard and Captive Portal">
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" id="how-it-works" style="background:#FFF;">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">How It Works</span>
+                <h2>Get Your ISP Up and Running in 4 Simple Steps</h2>
+                <p>From router setup to customer access — we make it simple.</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><path d="M6 18h.01"></path><path d="M10 18h.01"></path><path d="M16 10a4 4 0 0 0-8 0"></path><path d="M12 2v2"></path></svg></div>
+                    </div>
+                    <h3>Add Your MikroTik</h3>
+                    <p>Enter your router details and generate a secure provisioning command.</p>
+                    <div><span class="status-badge badge-green">2 minutes</span></div>
+                </div>
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg></div>
+                    </div>
+                    <h3>Paste the Command</h3>
+                    <p>Open WinBox Terminal, paste the command and press Enter. Your router connects automatically.</p>
+                    <div><span class="status-badge badge-blue">5-10 minutes</span></div>
+                </div>
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+                    </div>
+                    <h3>Customers Connect</h3>
+                    <p>Users connect to your Wi-Fi, choose a package, pay via M-Pesa, and get instant access.</p>
+                    <div><span class="status-badge badge-purple">Instant</span></div>
+                </div>
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-number">4</div>
+                        <div class="step-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
+                    </div>
+                    <h3>Track & Grow</h3>
+                    <p>Monitor sessions, revenue, and usage with real-time analytics and detailed reports.</p>
+                    <div><span class="status-badge badge-green">Always</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Powerful Features</span>
+                <h2>Everything you need to run your WISP</h2>
+                <p>We built the tools so you can focus on expanding your network coverage.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg></div>
+                    <h3>Automated M-Pesa</h3>
+                    <p>Native Daraja API integration. Customers pay via STK push, and RADIUS authenticates them instantly.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+                    <h3>Zero-Friction Onboarding</h3>
+                    <p>Provision routers using a single terminal command. No VPNs, port forwarding, or static IPs required.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg></div>
+                    <h3>Real-Time Analytics</h3>
+                    <p>Monitor active sessions, MAC addresses, bandwidth consumption, and daily revenue in a centralized dashboard.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></div>
+                    <h3>Prepaid SMS Wallet</h3>
+                    <p>Send automated access codes and alerts. Top up your balance via M-Pesa to keep notifications flowing.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg></div>
+                    <h3>Voucher Generation</h3>
+                    <p>Batch-generate printable PINs or scratch cards for cash-paying customers directly from the portal.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                    <h3>Bandwidth Management</h3>
+                    <p>Enforce download and upload speeds automatically using MikroTik Simple Queues injected via RADIUS.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq" style="background:#FFF;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Frequently Asked Questions</h2>
+            </div>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <button class="faq-question">Do I need a public IP address on my MikroTik? <span>+</span></button>
+                    <div class="faq-answer"><p>No. The router initiates an outbound HTTPS connection to our cloud server to fetch its configuration, bypassing NAT and CGNAT completely. Only our backend server requires a public IP.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Will this overwrite my existing ISP network settings? <span>+</span></button>
+                    <div class="faq-answer"><p>No. The provisioning script checks for conflicting HotSpot setups before applying changes. It only configures the specific interfaces and RADIUS settings required for the billing portal.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Where does the M-Pesa money go? <span>+</span></button>
+                    <div class="faq-answer"><p>Payments flow directly into your own registered Safaricom Till or Paybill number. The system simply listens to the Safaricom validation callback to activate the internet.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="section" id="contact">
+        <div class="container contact-grid">
+            <div class="contact-info">
+                <h2>Ready to automate?</h2>
+                <p style="margin:20px 0 40px; color:var(--text-muted);">Have questions about deployment or pricing? Reach out to our technical team directly.</p>
+                <h3>Contact Details</h3>
+                <p><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> +254 712 153 539</p>
+                <p><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> support@ispconnect.co.ke</p>
+            </div>
+            <div class="contact-form">
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone / WhatsApp</label>
+                        <input type="tel" placeholder="07XXXXXXXX" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea rows="4" placeholder="How many routers do you currently manage?" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h2><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg> ISPConnect</h2>
+                    <p style="margin-top:10px;">Smart Wi-Fi. Simple Billing. Automate your WISP management and scale your revenue with ease.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#contact">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2026 ISPConnect. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- CUSTOM MODAL (Hidden by default) -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <h3 id="modalTitle">Success</h3>
+            <p id="modalMessage">Action completed.</p>
+            <button class="btn btn-primary" id="closeModalBtn" style="width:100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- EXTERNAL JS -->
+    <script src="index.js"></script>
+</body>
+</html>
