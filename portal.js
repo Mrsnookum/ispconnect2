@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     lucide.createIcons();
 
-    // Pointing to the new public portal router
     const API_BASE = 'https://ispconnect-backend.onrender.com/api/portal';
     let selectedPackageId = null;
 
@@ -22,13 +21,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. Fetch Actual Active Packages
     async function loadPackages() {
         try {
-            const res = await fetch(`${API_BASE}/packages`, {
-                headers: {
-                    "ngrok-skip-browser-warning": "true",
-                    "Bypass-Tunnel-Reminder": "true",
-                    "Content-Type": "application/json"
-                }
-            });
+            // REMOVED ALL NGROK HEADERS! This prevents the Walled Garden from blocking the CORS preflight.
+            const res = await fetch(`${API_BASE}/packages`);
             if (!res.ok) throw new Error("Failed to load packages");
             
             const packages = await res.json();
@@ -45,7 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `).join('');
 
-            // Handle Selection
             document.querySelectorAll('.pkg-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.pkg-btn').forEach(b => b.classList.remove('selected'));
@@ -80,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
         lucide.createIcons();
 
         try {
-            // Extract MAC and IP from the MikroTik redirect URL
             const urlParams = new URLSearchParams(window.location.search);
             const routerMac = urlParams.get('mac') || "";
             const routerIp = urlParams.get('ip') || "";
@@ -88,9 +80,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(`${API_BASE}/pay`, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    "ngrok-skip-browser-warning": "true",
-                    "Bypass-Tunnel-Reminder": "true"
+                    'Content-Type': 'application/json' 
+                    // REMOVED NGROK HEADERS HERE TOO
                 },
                 body: JSON.stringify({ 
                     phone: phone, 
@@ -107,27 +98,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 lucide.createIcons();
                 showToast("Check your phone! Enter your M-Pesa PIN to complete payment.");
                 
-                // Start polling to check if the webhook processed the payment
                 let attempts = 0;
-                const maxAttempts = 20; // Try for about 60 seconds
+                const maxAttempts = 20; 
 
                 const pollInterval = setInterval(async () => {
                     attempts++;
                     try {
-                        const checkRes = await fetch(`${API_BASE}/verify/${phone}`, {
-                            headers: {
-                                "ngrok-skip-browser-warning": "true",
-                                "Bypass-Tunnel-Reminder": "true",
-                                "Content-Type": "application/json"
-                            }
-                        });
+                        // REMOVED NGROK HEADERS HERE TOO
+                        const checkRes = await fetch(`${API_BASE}/verify/${phone}`);
                         const checkData = await checkRes.json();
 
                         if (checkData.status === "success") {
                             clearInterval(pollInterval);
                             showToast("Payment received! Connecting you now...");
                             
-                            // Auto-fill and connect
                             document.getElementById('voucherInput').value = checkData.voucher;
                             document.getElementById('mtik-user').value = checkData.voucher;
                             document.getElementById('mtik-pass').value = checkData.voucher; 
@@ -145,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     } catch (err) {
                         console.error("Polling error", err);
                     }
-                }, 3000); // Check every 3 seconds
+                }, 3000); 
 
             } else {
                 throw new Error(data.detail || "Payment failed");
