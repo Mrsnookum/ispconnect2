@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const API_BASE = "https://ispconnect-backend.onrender.com";
-    const NGROK_URL = "https://sushi-unharmed-landing.ngrok-free.dev";
+    const NGROK_URL = "https://ispconnect-backend.onrender.com";
 
     // --- STANDARD TEMPLATE LOGIC ---
     const mobileToggle = document.getElementById('mobileToggle');
@@ -139,7 +139,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         identity: identity,
-                        ngrok_url: NGROK_URL
+                        email: "snookumtech@gmail.com", // ADDED: Required admin email for validation
+                        ngrok_url: API_BASE // CHANGED: Now using the live Render URL instead of the dead Ngrok URL
                     })
                 });
 
