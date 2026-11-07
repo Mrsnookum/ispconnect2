@@ -7,14 +7,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const API_BASE = 'https://ispconnect-backend.onrender.com/api/portal';
     let selectedPackageId = null;
 
-    // --- FIX: Grab the router's local IP destination from the URL ---
+    // --- FIX: Grab the router's local IP destination and add Google Redirect ---
     const urlParamsTop = new URLSearchParams(window.location.search);
-    const routerLoginUrl = urlParamsTop.get('login_url') || "http://10.0.0.1/login";
+    let routerLoginUrl = urlParamsTop.get('login_url') || "http://10.0.0.1/login";
+    
+    if (routerLoginUrl.includes('?')) {
+        routerLoginUrl += '&dst=https://google.com';
+    } else {
+        routerLoginUrl += '?dst=https://google.com';
+    }
+    
     const loginForm = document.getElementById('mtik-login-form');
     if (loginForm) {
         loginForm.action = routerLoginUrl;
     }
-    // ----------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     const packagesContainer = document.getElementById('packagesContainer');
     const phoneInput = document.getElementById('phoneInput');
@@ -89,7 +96,8 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const routerMac = urlParams.get('mac') || "";
-            const routerIp = urlParams.get('ip') || "";
+            // --- FIX: Correctly capture 'routerIp' from the URL so the backend knows where to inject ---
+            const routerIp = urlParams.get('routerIp') || urlParams.get('ip') || "";
 
             const res = await fetch(`${API_BASE}/pay`, {
                 method: 'POST',
