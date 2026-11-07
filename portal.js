@@ -1,5 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
-    lucide.createIcons();
+    // Safely check if icons loaded before trying to create them
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 
     const API_BASE = 'https://ispconnect-backend.onrender.com/api/portal';
     let selectedPackageId = null;
@@ -12,16 +15,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function showToast(msg) {
         const toast = document.getElementById('toastMsg');
-        toast.innerHTML = `<i data-lucide="info" width="18"></i> ${msg}`;
-        lucide.createIcons({root: toast});
+        let iconHtml = '';
+        if (typeof lucide !== 'undefined') {
+            iconHtml = `<i data-lucide="info" width="18"></i> `;
+        }
+        toast.innerHTML = `${iconHtml}${msg}`;
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons({root: toast});
+        }
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 4000);
     }
 
-    // 1. Fetch Actual Active Packages
     async function loadPackages() {
         try {
-            // REMOVED ALL NGROK HEADERS! This prevents the Walled Garden from blocking the CORS preflight.
             const res = await fetch(`${API_BASE}/packages`);
             if (!res.ok) throw new Error("Failed to load packages");
             
@@ -53,7 +60,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 2. Trigger PayHero STK Push & Start Polling
     btnPay.addEventListener('click', async () => {
         const phone = phoneInput.value.trim();
         
@@ -68,9 +74,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const originalText = btnPay.innerHTML;
-        btnPay.innerHTML = `<i data-lucide="loader" class="spin"></i> Initiating Payment...`;
+        btnPay.innerHTML = `Initiating Payment...`;
         btnPay.disabled = true;
-        lucide.createIcons();
 
         try {
             const urlParams = new URLSearchParams(window.location.search);
@@ -79,10 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const res = await fetch(`${API_BASE}/pay`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json' 
-                    // REMOVED NGROK HEADERS HERE TOO
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     phone: phone, 
                     package_id: selectedPackageId,
@@ -94,8 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             
             if (res.ok) {
-                btnPay.innerHTML = `<i data-lucide="loader" class="spin"></i> Verifying Payment...`;
-                lucide.createIcons();
+                btnPay.innerHTML = `Verifying Payment...`;
                 showToast("Check your phone! Enter your M-Pesa PIN to complete payment.");
                 
                 let attempts = 0;
@@ -104,7 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const pollInterval = setInterval(async () => {
                     attempts++;
                     try {
-                        // REMOVED NGROK HEADERS HERE TOO
                         const checkRes = await fetch(`${API_BASE}/verify/${phone}`);
                         const checkData = await checkRes.json();
 
@@ -123,7 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             clearInterval(pollInterval);
                             btnPay.innerHTML = originalText;
                             btnPay.disabled = false;
-                            lucide.createIcons();
                             showToast("Verification timeout. If you paid, try logging in with your phone number.");
                         }
                     } catch (err) {
@@ -139,11 +138,9 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast(`Error: ${err.message}`);
             btnPay.innerHTML = originalText;
             btnPay.disabled = false;
-            lucide.createIcons();
         } 
     });
 
-    // 3. Connect via MikroTik Form
     btnConnect.addEventListener('click', () => {
         const voucher = voucherInput.value.trim();
         if (!voucher) {
