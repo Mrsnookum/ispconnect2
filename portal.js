@@ -7,6 +7,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const API_BASE = 'https://ispconnect-backend.onrender.com/api/portal';
     let selectedPackageId = null;
 
+    // --- FIX: Grab the router's local IP destination from the URL ---
+    const urlParamsTop = new URLSearchParams(window.location.search);
+    const routerLoginUrl = urlParamsTop.get('login_url') || "http://10.0.0.1/login";
+    const loginForm = document.getElementById('mtik-login-form');
+    if (loginForm) {
+        loginForm.action = routerLoginUrl;
+    }
+    // ----------------------------------------------------------------
+
     const packagesContainer = document.getElementById('packagesContainer');
     const phoneInput = document.getElementById('phoneInput');
     const voucherInput = document.getElementById('voucherInput');
