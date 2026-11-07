@@ -95,8 +95,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             const urlParams = new URLSearchParams(window.location.search);
+            // --- FIX: Ensure MAC and IP are captured correctly from the MikroTik redirect URL ---
             const routerMac = urlParams.get('mac') || "";
-            // --- FIX: Correctly capture 'routerIp' from the URL so the backend knows where to inject ---
             const routerIp = urlParams.get('routerIp') || urlParams.get('ip') || "";
 
             const res = await fetch(`${API_BASE}/pay`, {
@@ -158,6 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } 
     });
 
+    // FIXED TYPO HERE (removed the stray 'a')
     btnConnect.addEventListener('click', () => {
         const voucher = voucherInput.value.trim();
         if (!voucher) {
