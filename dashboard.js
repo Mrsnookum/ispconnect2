@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- 6. DATA ENGINE & FETCH ---
-    const API_BASE = 'https://ispconnect-backend.onrender.com/api/admin';
+    const API_BASE = 'https://isp.huntjobs.co.ke/api/admin';
 
     function updateKPI(id, dataArray, formatAsCurrency = false) {
         if (!dataArray || dataArray.length < 2) return;
