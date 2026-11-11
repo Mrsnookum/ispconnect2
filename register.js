@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // API Configuration
-    const API_BASE = 'https://ispconnect-backend.onrender.com/api/admin';
+    const API_BASE = 'https://isp.huntjobs.co.ke/api/admin';
 
     // Application State
     const regData = {
@@ -108,9 +108,9 @@ document.addEventListener("DOMContentLoaded", () => {
             text.textContent = 'Success! Redirecting...';
             spin.style.display = 'none';
 
-            // FIX: Changed '/dashboard.html' to 'dashboard.html' to respect GitHub Pages subfolder
+            // Redirect to dashboard after a brief delay
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = '/dashboard.html';
             }, 1000);
 
         } catch (error) {
@@ -306,9 +306,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.getElementById('payText').textContent = 'Payment Verified! Redirecting...';
                         document.getElementById('btnPay').style.background = '#059669'; // Success Green
                         
-                        // FIX: Changed '/dashboard.html' to 'dashboard.html' to respect GitHub Pages subfolder
                         setTimeout(() => {
-                            window.location.href = 'dashboard.html';
+                            window.location.href = '/dashboard.html';
                         }, 1500);
                     } else if (statusData.status === "failed") {
                         // Instantly catch Safaricom network failures
