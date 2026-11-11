@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
         lucide.createIcons();
     }
 
-    const API_BASE = 'https://ispconnect-backend.onrender.com/api/portal';
+    // UPDATED: Pointing to Local Environment for development while VPS is pending
+    const API_BASE = 'https://isp.huntjobs.co.ke/api/portal';
     let selectedPackageId = null;
 
     // --- FIX: Grab the router's local IP destination and add Google Redirect ---
@@ -95,9 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             const urlParams = new URLSearchParams(window.location.search);
-            // --- FIX: Ensure MAC and IP are captured correctly from the MikroTik redirect URL ---
-            const routerMac = urlParams.get('mac') || "";
-            const routerIp = urlParams.get('routerIp') || urlParams.get('ip') || "";
+            // UPDATED: Integrates the mTikData injected from HTML for stronger MAC locking
+            const routerMac = urlParams.get('mac') || (window.mTikData ? window.mTikData.mac : "");
+            const routerIp = urlParams.get('routerIp') || urlParams.get('ip') || (window.mTikData ? window.mTikData.ip : "");
 
             const res = await fetch(`${API_BASE}/pay`, {
                 method: 'POST',
@@ -158,16 +159,48 @@ document.addEventListener("DOMContentLoaded", () => {
         } 
     });
 
-    // FIXED TYPO HERE (removed the stray 'a')
-    btnConnect.addEventListener('click', () => {
-        const voucher = voucherInput.value.trim();
+    // UPDATED: Dual Reconnect & MAC Binding via Backend API call
+    btnConnect.addEventListener('click', async () => {
+        const voucher = voucherInput.value.trim().toUpperCase();
         if (!voucher) {
-            showToast("Please enter a voucher code.");
+            showToast("Please enter a voucher code or M-Pesa code.");
             return;
         }
-        document.getElementById('mtik-user').value = voucher;
-        document.getElementById('mtik-pass').value = voucher; 
-        document.getElementById('mtik-login-form').submit();
+
+        const originalText = btnConnect.innerHTML;
+        btnConnect.innerHTML = `Verifying Code...`;
+        btnConnect.disabled = true;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const routerMac = urlParams.get('mac') || (window.mTikData ? window.mTikData.mac : "");
+
+        try {
+            // Hit local backend to verify code and bind to this device's MAC
+            const res = await fetch(`${API_BASE}/reconnect`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    code: voucher, 
+                    mac: routerMac 
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                showToast("Code accepted! Connecting...");
+                // Use backend-provided credentials, fallback to the code entered
+                document.getElementById('mtik-user').value = data.username || voucher;
+                document.getElementById('mtik-pass').value = data.password || voucher; 
+                document.getElementById('mtik-login-form').submit();
+            } else {
+                throw new Error(data.detail || "Invalid code or used on another device");
+            }
+        } catch (err) {
+            showToast(`Error: ${err.message}`);
+            btnConnect.innerHTML = originalText;
+            btnConnect.disabled = false;
+        }
     });
 
     loadPackages();
