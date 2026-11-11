@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Redirect to dashboard after a brief delay
             setTimeout(() => {
-                window.location.href = '/dashboard.html';
+                window.location.href = 'dashboard.html';
             }, 1000);
 
         } catch (error) {
@@ -307,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.getElementById('btnPay').style.background = '#059669'; // Success Green
                         
                         setTimeout(() => {
-                            window.location.href = '/dashboard.html';
+                            window.location.href = 'dashboard.html';
                         }, 1500);
                     } else if (statusData.status === "failed") {
                         // Instantly catch Safaricom network failures
