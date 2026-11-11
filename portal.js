@@ -134,9 +134,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             document.getElementById('mtik-user').value = checkData.voucher;
                             document.getElementById('mtik-pass').value = checkData.voucher; 
                             
+                            // INCREASED TIMEOUT: Gives the backend 5 seconds to successfully inject 
+                            // the user into the MikroTik before the phone attempts to log in.
                             setTimeout(() => {
                                 document.getElementById('mtik-login-form').submit();
-                            }, 1500);
+                            }, 5000);
                         } else if (attempts >= maxAttempts) {
                             clearInterval(pollInterval);
                             btnPay.innerHTML = originalText;
