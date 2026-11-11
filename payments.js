@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- 3. PAYMENTS LEDGER LOGIC ---
-    const API_BASE = 'https://ispconnect-backend.onrender.com/api/admin';
+    const API_BASE = 'https://isp.huntjobs.co.ke/api/admin';
     let allPayments = [];
     let currentFilter = 'all';
 
