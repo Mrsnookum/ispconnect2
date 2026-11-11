@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // --- SUBSCRIPTIONS LOGIC ---
-    const API_BASE = 'https://ispconnect-backend.onrender.com/api/admin';
+    const API_BASE = 'https://isp.huntjobs.co.ke/api/admin';
     let allSubs = [];
     let currentFilter = 'active';
 
