@@ -4,8 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lucide.createIcons();
     }
 
-    const API_BASE = "https://ispconnect-backend.onrender.com";
-    const NGROK_URL = "https://ispconnect-backend.onrender.com";
+    const API_BASE = "https://isp.huntjobs.co.ke";
 
     // --- STANDARD TEMPLATE LOGIC ---
     const mobileToggle = document.getElementById('mobileToggle');
@@ -42,23 +41,23 @@ document.addEventListener("DOMContentLoaded", () => {
     function showToast(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         if (!container) return; 
-        
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        
+
         const iconName = type === 'success' ? 'check-circle' : 'alert-circle';
         const iconColor = type === 'success' ? 'var(--primary)' : '#EF4444';
-        
+
         toast.innerHTML = `
             <i data-lucide="${iconName}" width="18" style="color: ${iconColor}"></i> 
             <span>${message}</span>
         `;
         container.appendChild(toast);
-        
+
         if (typeof lucide !== 'undefined') {
             lucide.createIcons({ root: toast });
         }
-        
+
         setTimeout(() => toast.classList.add('show'), 10);
         setTimeout(() => {
             toast.classList.remove('show');
@@ -74,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener('click', () => {
             filterBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             const filterType = btn.getAttribute('data-filter');
             if (tableEmptyText) {
                 if(filterType === 'All') {
@@ -88,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- WIZARD LOGIC ---
     let activeProvisioningToken = null; 
-    
+
     const dashboardView = document.getElementById('routers-dashboard-view');
     const wizardView = document.getElementById('onboarding-wizard-view');
     const step1 = document.getElementById('wizard-step-1');
@@ -96,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const step3 = document.getElementById('wizard-step-3'); // Kept variable in case it exists in HTML
     const ind2 = document.getElementById('step-2-indicator');
     const ind3 = document.getElementById('step-3-indicator'); 
-    
+
     let pollingInterval;
 
     const btnLinkMikrotik = document.getElementById('btn-link-mikrotik');
@@ -122,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnNextStep1.addEventListener('click', async () => {
             const identityInput = document.getElementById('mikrotik-identity');
             const identity = identityInput ? identityInput.value.trim() : '';
-            
+
             if(!identity) {
                 showToast("Please enter a MikroTik Identity.", "error");
                 if (identityInput) identityInput.focus();
@@ -139,8 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         identity: identity,
-                        email: "snookumtech@gmail.com", // ADDED: Required admin email for validation
-                        ngrok_url: API_BASE // CHANGED: Now using the live Render URL instead of the dead Ngrok URL
+                        backend_url: API_BASE
                     })
                 });
 
@@ -149,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 const data = await response.json();
-                
+
                 activeProvisioningToken = data.token; 
 
                 if (step1) step1.style.display = 'none';
@@ -160,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (provisioningCommandText) {
                     provisioningCommandText.innerText = data.command;
                 }
-                
+
                 showToast("Provisioning command generated.");
                 startPollingBackend(data.token);
             } catch (err) {
@@ -178,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnCopyCommand.addEventListener('click', () => {
             const provisioningCommandText = document.getElementById('provisioning-command-text');
             if (!provisioningCommandText) return;
-            
+
             navigator.clipboard.writeText(provisioningCommandText.innerText).then(() => {
                 btnCopyCommand.innerHTML = `<i data-lucide="check" width="20" color="var(--primary)"></i>`;
                 if (typeof lucide !== 'undefined') lucide.createIcons({ root: btnCopyCommand });
@@ -199,15 +197,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "ngrok-skip-browser-warning": "true" }
             });
             const result = await response.json();
-            
+
             if (result.status === "success") {
                 const routers = result.data;
                 const tbody = document.querySelector('table tbody'); 
-                
+
                 // Calculate Stats
                 let onlineCount = routers.filter(r => r.status === 'Online').length;
                 let onboardingCount = routers.filter(r => r.provisioning_status === 'Awaiting_Services').length;
-                
+
                 // Update Stat Cards 
                 if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = routers.length;
                 if(document.getElementById('stat-online')) document.getElementById('stat-online').innerText = onlineCount;
@@ -243,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clearInterval(pollingInterval);
         const pollingText = document.getElementById('polling-text');
         if (pollingText) pollingText.innerText = "Waiting for router to connect...";
-        
+
         pollingInterval = setInterval(async () => {
             try {
                 const response = await fetch(`${API_BASE}/api/provision/status/${token}`, {
@@ -256,13 +254,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
                 if (data.status === "connected") {
                     clearInterval(pollingInterval);
-                    
+
                     showToast("Router successfully provisioned and ready!");
 
                     // Immediately swap views and refresh table. No Step 3 required!
                     if (wizardView) wizardView.style.display = 'none';
                     if (dashboardView) dashboardView.style.display = 'block';
-                    
+
                     loadDashboardRouters();
                     resetWizard();
                 }
@@ -279,9 +277,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (step3) step3.style.display = 'none';
         if (ind2) ind2.classList.remove('active');
         if (ind3) ind3.classList.remove('active');
-        
+
         activeProvisioningToken = null; 
-        
+
         const identityInput = document.getElementById('mikrotik-identity');
         if (identityInput) identityInput.value = '';
     }
