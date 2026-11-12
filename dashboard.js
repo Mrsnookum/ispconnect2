@@ -118,6 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- 6. DATA ENGINE & FETCH ---
     const API_BASE = 'https://isp.huntjobs.co.ke/api/admin';
+    const sparklineInstances = {}; // Track sparkline charts so we can destroy them on update
 
     function updateKPI(id, dataArray, formatAsCurrency = false) {
         if (!dataArray || dataArray.length < 2) return;
@@ -142,7 +143,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function drawSparkline(canvasId, dataArray, color) {
-        new Chart(document.getElementById(canvasId).getContext('2d'), {
+        // Fix: Destroy existing chart on this canvas before drawing a new one
+        if (sparklineInstances[canvasId]) {
+            sparklineInstances[canvasId].destroy();
+        }
+        
+        sparklineInstances[canvasId] = new Chart(document.getElementById(canvasId).getContext('2d'), {
             type: 'line',
             data: { labels: dataArray.map((_, i) => i), datasets: [{ data: dataArray, borderColor: color, borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, animation: false }
