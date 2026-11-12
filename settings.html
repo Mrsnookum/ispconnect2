@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | ISPConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #00B37E; --primary-light: #E6F7F2;
+            --blue: #007BFF; --blue-light: #E6F2FF;
+            --purple: #8B5CF6; --purple-light: #F3E8FF;
+            --text-dark: #1E293B; --text-muted: #64748B;
+            --bg: #F8FAFC; --card-bg: #FFFFFF;
+            --sidebar-width: 260px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.02);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* SIDEBAR & HEADER */
+        .sidebar { width: var(--sidebar-width); background: var(--card-bg); border-right: 1px solid #E2E8F0; display: flex; flex-direction: column; padding: 24px 20px; z-index: 50; transition: left 0.3s ease; }
+        .logo { display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 32px; padding: 0 8px; }
+        .nav-menu { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        .nav-item:hover { background: #F8FAFC; color: var(--text-dark); }
+        .nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+        
+        .upgrade-card { background: linear-gradient(180deg, #022C22 0%, #064E3B 100%); border-radius: 12px; padding: 20px; color: #fff; margin-top: auto; position: relative; overflow: hidden; }
+        .upgrade-card::before { content: ''; position: absolute; top: -20px; left: -20px; right: -20px; height: 80px; background: radial-gradient(circle, rgba(0,179,126,0.3) 0%, transparent 70%); }
+        .upgrade-card h4 { font-size: 0.95rem; margin: 12px 0 6px; font-weight: 600; position: relative; z-index: 2;}
+        .upgrade-card p { font-size: 0.75rem; color: #A7F3D0; margin-bottom: 16px; line-height: 1.4; position: relative; z-index: 2;}
+        .btn-upgrade { background: var(--primary); color: #fff; border: none; padding: 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; width: 100%; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2;}
+
+        .mobile-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 40; display: none; backdrop-filter: blur(2px); }
+        .mobile-overlay.active { display: block; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        
+        .header { background: var(--bg); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; gap: 16px; }
+        .mobile-toggle { display: none; background: transparent; border: none; cursor: pointer; color: var(--text-dark); }
+        .header-profile { display: flex; align-items: center; gap: 24px; margin-left: auto; }
+        .profile-dropdown-container { position: relative; display: inline-block; }
+        .profile-btn { display: flex; align-items: center; gap: 12px; background: transparent; border: none; cursor: pointer; padding: 4px; border-radius: 8px; transition: background 0.2s; }
+        .profile-btn:hover { background: #E2E8F0; }
+        .avatar { width: 36px; height: 36px; background: var(--blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; flex-shrink: 0; }
+        .profile-info { text-align: left; }
+        .profile-name { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+        .profile-role { font-size: 0.7rem; color: var(--text-muted); }
+        
+        .profile-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; width: 220px; background: var(--card-bg); border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: var(--shadow-md); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s ease; z-index: 100; padding: 8px 0; }
+        .profile-dropdown.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; width: 100%; border: none; background: transparent; color: var(--text-dark); font-size: 0.85rem; font-weight: 500; cursor: pointer; text-align: left; transition: background 0.2s; }
+        .dropdown-item:hover { background: #F8FAFC; }
+        .dropdown-item.text-red { color: #EF4444; }
+        .dropdown-item.text-red:hover { background: #FEF2F2; }
+
+        /* SETTINGS UI */
+        .dashboard-container { padding: 0 32px 32px; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; width: 100%; gap: 24px; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+        .page-header p { color: var(--text-muted); font-size: 0.85rem; }
+
+        .settings-layout { display: flex; gap: 32px; align-items: flex-start; }
+        
+        .tabs-sidebar { display: flex; flex-direction: column; gap: 8px; width: 220px; flex-shrink: 0; }
+        .tab-btn { background: transparent; border: none; text-align: left; padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .tab-btn:hover { background: #E2E8F0; color: var(--text-dark); }
+        .tab-btn.active { background: var(--card-bg); color: var(--blue); box-shadow: var(--shadow-sm); border: 1px solid #E2E8F0; }
+
+        .tab-content-container { flex: 1; background: var(--card-bg); border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: var(--shadow-sm); padding: 32px; }
+        .tab-pane { display: none; animation: fadeIn 0.3s ease; }
+        .tab-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .tab-pane h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid #E2E8F0; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+        .form-group input { padding: 10px 14px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 0.85rem; outline: none; transition: border 0.2s; }
+        .form-group input:focus { border-color: var(--blue); }
+        .form-group input[type="color"] { padding: 4px; height: 42px; cursor: pointer; }
+        .form-group input[readonly] { background: #F8FAFC; color: var(--text-muted); cursor: not-allowed; font-family: monospace; font-size: 0.75rem;}
+        
+        .btn-primary { background: var(--blue); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 9999; }
+        .toast { background: #1E293B; color: #fff; padding: 16px 20px; border-radius: 8px; display: flex; align-items: center; gap: 12px; font-size: 0.85rem; font-weight: 500; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { border-left: 4px solid #EF4444; }
+        .toast.success { border-left: 4px solid var(--primary); }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; }
+            .sidebar.open { left: 0; }
+            .mobile-toggle { display: block; }
+            .dashboard-container { padding: 0 16px 16px; }
+            .settings-layout { flex-direction: column; gap: 16px; }
+            .tabs-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; }
+            .tab-btn { white-space: nowrap; }
+            .form-grid { grid-template-columns: 1fr; }
+            .tab-content-container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo"><i data-lucide="wifi" stroke-width="3"></i> ISPConnect</div>
+        <nav class="nav-menu">
+            <a href="dashboard.html" class="nav-item"><i data-lucide="home" width="18"></i> Dashboard</a>
+            <a href="mikrotik.html" class="nav-item"><i data-lucide="hard-drive" width="18"></i> MikroTik</a>
+            <a href="customers.html" class="nav-item"><i data-lucide="users" width="18"></i> Customers</a>
+            <a href="packages.html" class="nav-item"><i data-lucide="package" width="18"></i> Packages</a>
+            <a href="payments.html" class="nav-item"><i data-lucide="file-text" width="18"></i> Payments</a>
+            <a href="subscriptions.html" class="nav-item"><i data-lucide="refresh-cw" width="18"></i> Subscriptions</a>
+            <a href="sessions.html" class="nav-item"><i data-lucide="monitor-play" width="18"></i> Sessions</a>
+            <a href="reports.html" class="nav-item"><i data-lucide="bar-chart-2" width="18"></i> Reports</a>
+            <a href="sms.html" class="nav-item"><i data-lucide="message-square" width="18"></i> SMS</a>
+            <a href="settings.html" class="nav-item active"><i data-lucide="settings" width="18"></i> Settings</a>
+        </nav>
+        <div class="upgrade-card">
+            <i data-lucide="wifi" style="color: var(--primary); margin-bottom: 4px;"></i>
+            <h4>Fast. Reliable.<br>Connected.</h4>
+            <p>Powering your internet business with smart billing solutions.</p>
+            <button class="btn-upgrade">Upgrade Plan <i data-lucide="arrow-right" width="14"></i></button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="mobile-toggle" id="mobileToggle"><i data-lucide="menu"></i></button>
+            </div>
+            <div class="header-profile">
+                <div class="profile-dropdown-container">
+                    <button class="profile-btn" id="profileToggleBtn">
+                        <div class="avatar" id="navAvatar">--</div>
+                        <div class="profile-info">
+                            <div class="profile-name" id="navName">Loading...</div>
+                            <div class="profile-role">Administrator</div>
+                        </div>
+                        <i data-lucide="chevron-down" width="16" color="#94A3B8"></i>
+                    </button>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <button class="dropdown-item text-red" id="logoutBtn"><i data-lucide="log-out" width="16"></i> Sign Out</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <div class="page-header">
+                <h1>Platform Settings.</h1>
+                <p>Manage your billing integrations, portal branding, and global platform defaults.</p>
+            </div>
+
+            <div class="settings-layout">
+                <div class="tabs-sidebar">
+                    <button class="tab-btn active" data-target="tab-branding"><i data-lucide="palette" width="16"></i> Portal Branding</button>
+                    <button class="tab-btn" data-target="tab-payhero"><i data-lucide="credit-card" width="16"></i> PayHero (M-Pesa)</button>
+                    <button class="tab-btn" data-target="tab-business"><i data-lucide="building" width="16"></i> Business Profile</button>
+                    <button class="tab-btn" data-target="tab-security"><i data-lucide="shield" width="16"></i> Security</button>
+                </div>
+
+                <div class="tab-content-container">
+                    <!-- BRANDING TAB -->
+                    <div class="tab-pane active" id="tab-branding">
+                        <h2>Captive Portal Branding</h2>
+                        <form id="formBranding">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Primary Theme Color</label>
+                                    <input type="color" id="brandPrimary" value="#00B37E">
+                                </div>
+                                <div class="form-group">
+                                    <label>Secondary / Accent Color</label>
+                                    <input type="color" id="brandSecondary" value="#007BFF">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Logo Image URL</label>
+                                    <input type="url" id="brandLogo" placeholder="https://example.com/logo.png">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Background Image URL</label>
+                                    <input type="url" id="brandBg" placeholder="https://example.com/background.jpg">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Welcome Message</label>
+                                    <input type="text" id="brandWelcome" placeholder="Welcome to Brightscale High-Speed Wi-Fi">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary" id="btnBranding"><i data-lucide="save" width="16"></i> Save Branding</button>
+                        </form>
+                    </div>
+
+                    <!-- PAYHERO TAB -->
+                    <div class="tab-pane" id="tab-payhero">
+                        <h2>PayHero Integration</h2>
+                        <form id="formPayhero">
+                            <div class="form-grid">
+                                <div class="form-group full">
+                                    <label>PayHero API Key</label>
+                                    <input type="password" id="phApiKey" placeholder="Enter your secret API key">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Channel / Service ID</label>
+                                    <input type="text" id="phChannel" placeholder="e.g. 12345">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Webhook URL (Read Only - Paste in PayHero Dashboard)</label>
+                                    <input type="text" readonly value="https://isp.huntjobs.co.ke/api/public/payhero/callback">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary" id="btnPayhero"><i data-lucide="save" width="16"></i> Save Payment Config</button>
+                        </form>
+                    </div>
+
+                    <!-- BUSINESS TAB -->
+                    <div class="tab-pane" id="tab-business">
+                        <h2>Business Profile</h2>
+                        <form id="formBusiness">
+                            <div class="form-grid">
+                                <div class="form-group full">
+                                    <label>ISP / Business Name</label>
+                                    <input type="text" id="bizName" placeholder="e.g. Brightscale Networks">
+                                </div>
+                                <div class="form-group full">
+                                    <label>Support Contact (Phone / Email)</label>
+                                    <input type="text" id="bizContact" placeholder="e.g. 0700 000 000 or support@isp.com">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary" id="btnBusiness"><i data-lucide="save" width="16"></i> Save Profile</button>
+                        </form>
+                    </div>
+
+                    <!-- SECURITY TAB -->
+                    <div class="tab-pane" id="tab-security">
+                        <h2>Admin Credentials</h2>
+                        <form id="formSecurity">
+                            <div class="form-grid">
+                                <div class="form-group full">
+                                    <label>New Admin Username</label>
+                                    <input type="text" id="adminUser" placeholder="Enter new username">
+                                </div>
+                                <div class="form-group full">
+                                    <label>New Admin Password</label>
+                                    <input type="password" id="adminPass" placeholder="Enter new secure password">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary" id="btnSecurity"><i data-lucide="shield-check" width="16"></i> Update Credentials</button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="settings.js"></script>
+</body>
+</html>
