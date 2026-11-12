@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const customerName = s.customers ? s.customers.name || 'Unknown' : 'Unknown';
             const customerPhone = s.customers ? s.customers.phone : 'No Phone';
             const packageName = s.packages ? s.packages.name : 'Unknown Package';
-            const vouch = s.voucher_code ? `<span class="code-pill">${s.voucher_code}</span>` : 'N/A';
+            const vouch = s.voucher_code && s.voucher_code !== 'N/A' ? `<span class="code-pill">${s.voucher_code}</span>` : 'N/A';
             
             let actions = '';
             if (s.computed_status === 'active') {
