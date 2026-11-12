@@ -44,6 +44,45 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => toast.classList.remove('show'), 4000);
     }
 
+    // --- NEW: DYNAMIC BRANDING ENGINE ---
+    async function loadPortalBranding() {
+        try {
+            const res = await fetch('https://isp.huntjobs.co.ke/api/admin/settings');
+            if (!res.ok) return;
+            
+            const config = await res.json();
+
+            // 1. Apply Primary Theme Color
+            if (config.brand_primary) {
+                // Update global CSS variables
+                document.documentElement.style.setProperty('--primary', config.brand_primary);
+                document.documentElement.style.setProperty('--primary-dark', config.brand_primary);
+                
+                // Override the left panel gradient to use the new color
+                const leftPanel = document.getElementById('portalLeftPanel');
+                if (leftPanel) {
+                    leftPanel.style.background = `linear-gradient(135deg, #022C22 0%, ${config.brand_primary} 100%)`;
+                }
+            }
+
+            // 2. Apply ISP Name
+            if (config.isp_name) {
+                const brandName = document.getElementById('portalBrandName');
+                if (brandName) brandName.textContent = config.isp_name;
+                document.title = `Connect | ${config.isp_name} Wi-Fi`;
+            }
+
+            // 3. Apply Welcome Message
+            if (config.brand_welcome) {
+                const welcomeMsg = document.getElementById('portalWelcome');
+                if (welcomeMsg) welcomeMsg.textContent = config.brand_welcome;
+            }
+        } catch (err) {
+            console.error("Failed to load dynamic branding:", err);
+        }
+    }
+    // ------------------------------------
+
     async function loadPackages() {
         try {
             const res = await fetch(`${API_BASE}/packages`);
@@ -205,5 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Execute fetches on load
+    loadPortalBranding();
     loadPackages();
 });
