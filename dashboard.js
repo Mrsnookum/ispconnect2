@@ -205,9 +205,11 @@ document.addEventListener("DOMContentLoaded", () => {
             renderTables(data.recent_payments, data.packages);
 
             if (data.router) {
-                document.getElementById('router-uptime').textContent = `Uptime: ${data.router.main_uptime}`;
-                document.getElementById('hotspot-users').textContent = `Users: ${data.router.hotspot_active}`;
-                document.getElementById('radius-uptime').textContent = `Uptime: ${data.router.radius_uptime}`;
+                // I removed the hardcoded "Uptime: " and "Users: " prefixes here because 
+                // the updated dashboard.py now sends exactly formatted strings (e.g., "76 Users", "1 / 1 Online")
+                document.getElementById('router-uptime').textContent = data.router.main_uptime;
+                document.getElementById('hotspot-users').textContent = data.router.hotspot_active;
+                document.getElementById('radius-uptime').textContent = data.router.radius_uptime;
             }
 
             lucide.createIcons();
