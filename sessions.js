@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- AUTHENTICATION LOGIC ---
     const adminName = localStorage.getItem("adminName");
     if (!adminName) {
-        window.location.href = '/register.html?view=login';
+        window.location.href = 'register.html?view=login';
         return;
     }
     document.getElementById("navName").textContent = adminName;
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("logoutBtn").addEventListener("click", () => {
         localStorage.removeItem("adminName");
-        window.location.href = '/register.html?view=login';
+        window.location.href = 'register.html?view=login';
     });
 
     const sidebar = document.getElementById("sidebar");
