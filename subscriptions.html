@@ -130,6 +130,25 @@
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.error { border-left: 4px solid #EF4444; }
         .toast.success { border-left: 4px solid var(--primary); }
+
+        /* --- RESPONSIVE MOBILE STYLES --- */
+        @media (max-width: 1024px) {
+            .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; }
+            .sidebar.active { left: 0; }
+            .mobile-toggle { display: block; }
+            .header-profile .profile-info { display: none; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 16px 20px; }
+            .dashboard-container { padding: 0 20px 20px; }
+            .kpi-grid { grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+            .search-container { max-width: none; flex: 1; }
+            .toolbar { flex-direction: column; gap: 16px; align-items: stretch; }
+            .filter-tabs { overflow-x: auto; padding-bottom: 4px; }
+            .toolbar .search-container { max-width: none; }
+        }
     </style>
 </head>
 <body>
@@ -167,7 +186,7 @@
     <main class="main-content">
         <!-- HEADER -->
         <header class="header">
-            <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
                 <button class="mobile-toggle" id="mobileToggle">
                     <i data-lucide="menu"></i>
                 </button>
@@ -204,8 +223,8 @@
         </header>
 
         <!-- DASHBOARD -->
-        <div class="dashboard-container" style="padding: 32px;">
-            <div class="page-header">
+        <div class="dashboard-container">
+            <div class="page-header" style="margin-top: 32px;">
                 <div>
                     <h1>Subscriptions.</h1>
                     <p>Live tracking of active vouchers and time remaining.</p>
@@ -305,5 +324,19 @@
 
     <div class="toast-container" id="toastContainer"></div>
     <script src="subscriptions.js"></script>
+    <script>
+        // MOBILE SIDEBAR TOGGLE
+        const mobileToggle = document.getElementById('mobileToggle');
+        const sidebar = document.getElementById('sidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            mobileOverlay.classList.toggle('active');
+        }
+
+        if(mobileToggle) mobileToggle.addEventListener('click', toggleSidebar);
+        if(mobileOverlay) mobileOverlay.addEventListener('click', toggleSidebar);
+    </script>
 </body>
 </html>
