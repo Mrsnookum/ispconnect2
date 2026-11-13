@@ -167,15 +167,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         if (checkData.status === "success") {
                             clearInterval(pollInterval);
-                            showToast("Payment received! Connecting you to the internet...");
+                            showToast("Payment received! Redirecting to success...");
                             
                             setTimeout(() => {
                                 // AUTO-DETECT VOUCHER: Grab the voucher directly from the backend response
                                 const autoVoucher = checkData.voucher;
                                 
-                                // FORCE BROWSER REDIRECT: Bypasses the broken success.html button entirely 
-                                // and instantly logs the user into the router with the dynamic code
-                                window.location.href = `${routerLoginUrl}&username=${autoVoucher}&password=${autoVoucher}`;
+                                // REDIRECT TO SUCCESS SCREEN: Pass voucher and encoded login_url so success.html can handle the auto-connect view
+                                const encodedLoginUrl = encodeURIComponent(routerLoginUrl);
+                                window.location.href = `success.html?voucher=${autoVoucher}&login_url=${encodedLoginUrl}`;
                             }, 1500);
                         } else if (attempts >= maxAttempts) {
                             clearInterval(pollInterval);
@@ -228,14 +228,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
 
             if (res.ok) {
-                showToast("Code accepted! Connecting...");
+                showToast("Code accepted! Redirecting...");
                 
                 setTimeout(() => {
                     // AUTO-DETECT VOUCHER: Use the validated code from the backend
                     const autoVoucher = data.username || voucher;
+                    const encodedLoginUrl = encodeURIComponent(routerLoginUrl);
                     
-                    // FORCE BROWSER REDIRECT: Instantly logs the user in
-                    window.location.href = `${routerLoginUrl}&username=${autoVoucher}&password=${autoVoucher}`;
+                    // REDIRECT TO SUCCESS SCREEN
+                    window.location.href = `success.html?voucher=${autoVoucher}&login_url=${encodedLoginUrl}`;
                 }, 1500);
             } else {
                 throw new Error(data.detail || "Invalid code or used on another device");
