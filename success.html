@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Payment Successful</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #F1F5F9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .success-card { background: #fff; padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; max-width: 400px; width: 100%; }
+        .icon-circle { width: 80px; height: 80px; background: #E6F7F2; color: #00B37E; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 24px; }
+        h1 { font-size: 1.5rem; color: #1E293B; margin-bottom: 8px; }
+        p { color: #64748B; font-size: 0.95rem; margin-bottom: 32px; line-height: 1.5; }
+        .voucher-box { background: #F8FAFC; border: 2px dashed #CBD5E1; padding: 20px; border-radius: 12px; margin-bottom: 32px; }
+        .voucher-label { font-size: 0.75rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .voucher-code { font-size: 2rem; font-weight: 700; color: #0F172A; letter-spacing: 2px; }
+        
+        .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 700; color: #fff; background: #00B37E; text-decoration: none; transition: background 0.2s; }
+        .btn:hover { background: #009065; }
+    </style>
+</head>
+<body>
+
+    <div class="success-card">
+        <div class="icon-circle" id="iconCircle">
+            <i data-lucide="check-circle" width="40" height="40"></i>
+        </div>
+        <h1>Payment Successful!</h1>
+        <p>Your internet package has been activated. Your voucher code is below.</p>
+        
+        <div class="voucher-box">
+            <div class="voucher-label">Your Wi-Fi Code</div>
+            <div class="voucher-code" id="displayVoucher">------</div>
+        </div>
+
+        <a href="#" class="btn" id="btnConnect">
+            <i data-lucide="wifi"></i> Connect to Internet
+        </a>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // 1. Grab parameters from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const voucher = urlParams.get('voucher') || "";
+        const routerIp = urlParams.get('ip') || "10.0.0.1";
+        
+        // 2. Display the voucher code on the screen
+        document.getElementById('displayVoucher').textContent = voucher;
+
+        // 3. Build the secure connection link using MikroTik's GET login method
+        const connectUrl = `http://${routerIp}/login?username=${voucher}&password=${voucher}&dst=https://google.com`;
+        document.getElementById('btnConnect').href = connectUrl;
+
+        // 4. Apply dynamic branding from your settings API
+        async function loadBranding() {
+            try {
+                const res = await fetch('https://isp.huntjobs.co.ke/api/admin/settings');
+                const config = await res.json();
+                if (config.brand_primary) {
+                    document.getElementById('btnConnect').style.backgroundColor = config.brand_primary;
+                    document.getElementById('iconCircle').style.color = config.brand_primary;
+                }
+            } catch (err) {}
+        }
+        loadBranding();
+    </script>
+</body>
+</html>
