@@ -167,14 +167,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         if (checkData.status === "success") {
                             clearInterval(pollInterval);
-                            showToast("Payment received! Redirecting...");
+                            showToast("Payment received! Connecting you to the internet...");
                             
                             setTimeout(() => {
-                                // Grab the router IP from the original URL params
-                                const currentIp = urlParams.get('routerIp') || urlParams.get('ip') || (window.mTikData ? window.mTikData.ip : "10.0.0.1");
+                                // AUTO-DETECT VOUCHER: Grab the voucher directly from the backend response
+                                const autoVoucher = checkData.voucher;
                                 
-                                // Redirect to the success screen, passing the voucher and IP in the URL
-                                window.location.href = `success.html?voucher=${checkData.voucher}&ip=${currentIp}`;
+                                // FORCE BROWSER REDIRECT: Bypasses the broken success.html button entirely 
+                                // and instantly logs the user into the router with the dynamic code
+                                window.location.href = `${routerLoginUrl}&username=${autoVoucher}&password=${autoVoucher}`;
                             }, 1500);
                         } else if (attempts >= maxAttempts) {
                             clearInterval(pollInterval);
@@ -230,8 +231,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 showToast("Code accepted! Connecting...");
                 
                 setTimeout(() => {
-                    const currentIp = urlParams.get('routerIp') || urlParams.get('ip') || (window.mTikData ? window.mTikData.ip : "10.0.0.1");
-                    window.location.href = `success.html?voucher=${data.username || voucher}&ip=${currentIp}`;
+                    // AUTO-DETECT VOUCHER: Use the validated code from the backend
+                    const autoVoucher = data.username || voucher;
+                    
+                    // FORCE BROWSER REDIRECT: Instantly logs the user in
+                    window.location.href = `${routerLoginUrl}&username=${autoVoucher}&password=${autoVoucher}`;
                 }, 1500);
             } else {
                 throw new Error(data.detail || "Invalid code or used on another device");
