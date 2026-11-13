@@ -28,14 +28,14 @@
             <i data-lucide="check-circle" width="40" height="40"></i>
         </div>
         <h1>Payment Successful!</h1>
-        <p>Your internet package has been activated. Your voucher code is below.</p>
+        <p>Your internet package has been activated. Connecting you automatically...</p>
         
         <div class="voucher-box">
             <div class="voucher-label">Your Wi-Fi Code</div>
             <div class="voucher-code" id="displayVoucher">------</div>
         </div>
 
-        <a href="#" class="btn" id="btnConnect">
+        <a href="#" class="btn" id="btnConnect" style="display: none;">
             <i data-lucide="wifi"></i> Connect to Internet
         </a>
     </div>
@@ -48,17 +48,28 @@
         const voucher = urlParams.get('voucher') || "";
         let routerIp = urlParams.get('ip');
         
-        // 2. FIX: If MikroTik passes the literal string "$(ip)", force it to the local IP
-        if (!routerIp || routerIp === "$(ip)") {
-            routerIp = "10.0.0.1";
+        // 2. Grab the login_url if it was passed via encoded search parameters
+        let rawLoginUrl = urlParams.get('login_url');
+        let connectUrl = "";
+
+        if (rawLoginUrl) {
+            const loginUrl = decodeURIComponent(rawLoginUrl);
+            connectUrl = `${loginUrl}&username=${voucher}&password=${voucher}`;
+        } else {
+            if (!routerIp || routerIp === "$(ip)") {
+                routerIp = "10.0.0.1";
+            }
+            connectUrl = `http://${routerIp}/login?username=${voucher}&password=${voucher}&dst=https://google.com`;
         }
         
         // 3. Display the voucher code on the screen
         document.getElementById('displayVoucher').textContent = voucher;
-
-        // 4. Build the secure connection link using MikroTik's GET login method
-        const connectUrl = `http://${routerIp}/login?username=${voucher}&password=${voucher}&dst=https://google.com`;
         document.getElementById('btnConnect').href = connectUrl;
+
+        // 4. Auto-connect completely hands-free after 3 seconds
+        setTimeout(() => {
+            window.location.href = connectUrl;
+        }, 3000);
 
         // 5. Apply dynamic branding from your settings API
         async function loadBranding() {
