@@ -46,16 +46,21 @@
         // 1. Grab parameters from the URL
         const urlParams = new URLSearchParams(window.location.search);
         const voucher = urlParams.get('voucher') || "";
-        const routerIp = urlParams.get('ip') || "10.0.0.1";
+        let routerIp = urlParams.get('ip');
         
-        // 2. Display the voucher code on the screen
+        // 2. FIX: If MikroTik passes the literal string "$(ip)", force it to the local IP
+        if (!routerIp || routerIp === "$(ip)") {
+            routerIp = "10.0.0.1";
+        }
+        
+        // 3. Display the voucher code on the screen
         document.getElementById('displayVoucher').textContent = voucher;
 
-        // 3. Build the secure connection link using MikroTik's GET login method
+        // 4. Build the secure connection link using MikroTik's GET login method
         const connectUrl = `http://${routerIp}/login?username=${voucher}&password=${voucher}&dst=https://google.com`;
         document.getElementById('btnConnect').href = connectUrl;
 
-        // 4. Apply dynamic branding from your settings API
+        // 5. Apply dynamic branding from your settings API
         async function loadBranding() {
             try {
                 const res = await fetch('https://isp.huntjobs.co.ke/api/admin/settings');
