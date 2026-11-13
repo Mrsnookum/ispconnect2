@@ -87,17 +87,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- WIZARD LOGIC ---
     let activeProvisioningToken = null; 
+    let pollingInterval;
 
     const dashboardView = document.getElementById('routers-dashboard-view');
     const wizardView = document.getElementById('onboarding-wizard-view');
     const step1 = document.getElementById('wizard-step-1');
     const step2 = document.getElementById('wizard-step-2');
-    const step3 = document.getElementById('wizard-step-3'); // Kept variable in case it exists in HTML
+    const step3 = document.getElementById('wizard-step-3');
+    
+    // UI Step Elements inside Step 3
+    const step3Form = document.getElementById('wizard-step-3-form');
+    const step3Terminal = document.getElementById('wizard-step-3-terminal');
+
+    const ind1 = document.getElementById('step-1-indicator');
     const ind2 = document.getElementById('step-2-indicator');
     const ind3 = document.getElementById('step-3-indicator'); 
 
-    let pollingInterval;
-
+    // Open/Close Wizard
     const btnLinkMikrotik = document.getElementById('btn-link-mikrotik');
     if (btnLinkMikrotik) {
         btnLinkMikrotik.addEventListener('click', () => {
@@ -112,27 +118,70 @@ document.addEventListener("DOMContentLoaded", () => {
         btnCancelOnboarding.addEventListener('click', () => {
             if (wizardView) wizardView.style.display = 'none';
             if (dashboardView) dashboardView.style.display = 'block'; 
-            clearInterval(pollingInterval);
+            resetWizard();
         });
     }
 
+    // Wizard Navigation Logic
     const btnNextStep1 = document.getElementById('btn-next-step-1');
     if (btnNextStep1) {
-        btnNextStep1.addEventListener('click', async () => {
+        btnNextStep1.addEventListener('click', () => {
+            step1.style.display = 'none';
+            step2.style.display = 'block';
+            ind2.classList.add('active');
+        });
+    }
+
+    const btnBackStep2 = document.getElementById('btn-back-step-2');
+    if (btnBackStep2) {
+        btnBackStep2.addEventListener('click', () => {
+            step2.style.display = 'none';
+            step1.style.display = 'block';
+            ind2.classList.remove('active');
+        });
+    }
+
+    const btnNextStep2 = document.getElementById('btn-next-step-2');
+    if (btnNextStep2) {
+        btnNextStep2.addEventListener('click', () => {
+            step2.style.display = 'none';
+            step3.style.display = 'block';
+            ind3.classList.add('active');
+        });
+    }
+
+    const btnBackStep3 = document.getElementById('btn-back-step-3');
+    if (btnBackStep3) {
+        btnBackStep3.addEventListener('click', () => {
+            step3.style.display = 'none';
+            step2.style.display = 'block';
+            ind3.classList.remove('active');
+        });
+    }
+
+    // Step 3: Generate Script & Provision
+    const btnGenerateScript = document.getElementById('btn-generate-script');
+    if (btnGenerateScript) {
+        btnGenerateScript.addEventListener('click', async () => {
+            
+            // 1. Gather form input (Only Identity now!)
             const identityInput = document.getElementById('mikrotik-identity');
             const identity = identityInput ? identityInput.value.trim() : '';
 
+            // 2. Validate
             if(!identity) {
                 showToast("Please enter a MikroTik Identity.", "error");
                 if (identityInput) identityInput.focus();
                 return;
             }
 
-            const originalBtnText = btnNextStep1.innerHTML;
-            btnNextStep1.disabled = true;
-            btnNextStep1.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;display:inline-block;vertical-align:middle;margin-right:8px;"></div> Generating...`;
+            // 3. UI Loading State
+            const originalBtnText = btnGenerateScript.innerHTML;
+            btnGenerateScript.disabled = true;
+            btnGenerateScript.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;display:inline-block;vertical-align:middle;margin-right:8px;"></div> Generating...`;
 
             try {
+                // 4. Hit Backend (IP and DNS are dynamically handled by the server now)
                 const response = await fetch(`${API_BASE}/api/provision/init`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -147,12 +196,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 const data = await response.json();
-
                 activeProvisioningToken = data.token; 
 
-                if (step1) step1.style.display = 'none';
-                if (step2) step2.style.display = 'block';
-                if (ind2) ind2.classList.add('active');
+                // 5. Update UI to show the terminal and hide the form
+                if (step3Form) step3Form.style.display = 'none';
+                if (step3Terminal) step3Terminal.style.display = 'block';
 
                 const provisioningCommandText = document.getElementById('provisioning-command-text');
                 if (provisioningCommandText) {
@@ -160,35 +208,64 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 showToast("Provisioning command generated.");
+                
+                // 6. Start listening for the router to phone home
                 startPollingBackend(data.token);
+
             } catch (err) {
                 console.error(err);
                 showToast("Failed to connect to backend server.", "error");
             } finally {
-                btnNextStep1.disabled = false;
-                btnNextStep1.innerHTML = originalBtnText;
+                btnGenerateScript.disabled = false;
+                btnGenerateScript.innerHTML = originalBtnText;
             }
         });
     }
 
-    const btnCopyCommand = document.getElementById('btn-copy-command');
-    if (btnCopyCommand) {
-        btnCopyCommand.addEventListener('click', () => {
-            const provisioningCommandText = document.getElementById('provisioning-command-text');
-            if (!provisioningCommandText) return;
+    // --- UNIVERSAL COPY BUTTON LOGIC (Handles Steps 1, 2, and 3) ---
+    document.querySelectorAll('.btn-copy').forEach(btn => {
+        // Strip any raw HTML onclick handlers to prevent browser conflicts
+        btn.removeAttribute('onclick');
 
-            navigator.clipboard.writeText(provisioningCommandText.innerText).then(() => {
-                btnCopyCommand.innerHTML = `<i data-lucide="check" width="20" color="var(--primary)"></i>`;
-                if (typeof lucide !== 'undefined') lucide.createIcons({ root: btnCopyCommand });
+        btn.addEventListener('click', () => {
+            let textToCopy = "";
+            const dataCommand = btn.getAttribute('data-command');
+            
+            // Determine where the text is coming from based on the step
+            if (dataCommand) {
+                textToCopy = dataCommand; // Uses the clean data attribute (Steps 1 & 2)
+            } else if (btn.id === 'btn-copy-command') {
+                const textElem = document.getElementById('provisioning-command-text');
+                if (textElem) textToCopy = textElem.innerText; // Grabs the generated backend script (Step 3)
+            } else {
+                // Fallback: Check if there's a code block right next to the button
+                const prevElem = btn.previousElementSibling;
+                if (prevElem && prevElem.tagName === 'CODE') {
+                    textToCopy = prevElem.innerText;
+                }
+            }
+
+            if (!textToCopy) return;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Show visual checkmark directly on the button
+                btn.innerHTML = `<i data-lucide="check" width="20" color="var(--primary)"></i>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons({ root: btn });
+                
+                // Fire the custom application toast
                 showToast("Command copied to clipboard!");
 
+                // Revert the button icon after 2 seconds
                 setTimeout(() => {
-                    btnCopyCommand.innerHTML = `<i data-lucide="copy" width="20"></i>`;
-                    if (typeof lucide !== 'undefined') lucide.createIcons({ root: btnCopyCommand });
+                    btn.innerHTML = `<i data-lucide="copy" width="20"></i>`;
+                    if (typeof lucide !== 'undefined') lucide.createIcons({ root: btn });
                 }, 2000);
+            }).catch(err => {
+                console.error("Clipboard copy failed:", err);
+                showToast("Failed to copy command.", "error");
             });
         });
-    }
+    });
 
     // --- Fetch and Display Dashboard Data ---
     async function loadDashboardRouters() {
@@ -222,8 +299,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             <td><strong>${r.name || r.identity}</strong></td>
                             <td>${r.identity}</td>
                             <td>${r.ip_address || 'Unknown'}</td>
-                            <td><span class="badge ${r.status === 'Online' ? 'bg-success' : 'bg-secondary'}" style="padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">${r.status}</span></td>
-                            <td><button class="btn btn-sm" style="padding: 4px 8px; border: 1px solid var(--border); background: var(--bg-color); border-radius: 4px; cursor: pointer;">Manage</button></td>
+                            <td><span class="badge ${r.status === 'Online' ? 'bg-success' : 'bg-secondary'}" style="padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; background: ${r.status === 'Online' ? 'var(--primary-light)' : '#F1F5F9'}; color: ${r.status === 'Online' ? 'var(--primary)' : 'var(--text-muted)'};">${r.status}</span></td>
+                            <td><button class="btn btn-sm action-btn" style="padding: 4px 8px; border: 1px solid #E2E8F0; background: transparent; border-radius: 4px; cursor: pointer; color: var(--text-dark); transition: all 0.2s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">Manage</button></td>
                         </tr>
                     `).join('');
                 }
@@ -272,14 +349,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function resetWizard() {
         clearInterval(pollingInterval);
+        activeProvisioningToken = null; 
+
+        // Reset display views
         if (step1) step1.style.display = 'block';
         if (step2) step2.style.display = 'none';
         if (step3) step3.style.display = 'none';
+        
+        // Reset sub-views in Step 3
+        if (step3Form) step3Form.style.display = 'block';
+        if (step3Terminal) step3Terminal.style.display = 'none';
+
+        // Reset Stepper UI
+        if (ind1) ind1.classList.add('active');
         if (ind2) ind2.classList.remove('active');
         if (ind3) ind3.classList.remove('active');
 
-        activeProvisioningToken = null; 
-
+        // Clear Inputs
         const identityInput = document.getElementById('mikrotik-identity');
         if (identityInput) identityInput.value = '';
     }
