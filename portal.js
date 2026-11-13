@@ -167,17 +167,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         if (checkData.status === "success") {
                             clearInterval(pollInterval);
-                            showToast("Payment received! Connecting you now...");
+                            showToast("Payment received! Redirecting...");
                             
-                            document.getElementById('voucherInput').value = checkData.voucher;
-                            document.getElementById('mtik-user').value = checkData.voucher;
-                            document.getElementById('mtik-pass').value = checkData.voucher; 
-                            
-                            // INCREASED TIMEOUT: Gives the backend 5 seconds to successfully inject 
-                            // the user into the MikroTik before the phone attempts to log in.
                             setTimeout(() => {
-                                document.getElementById('mtik-login-form').submit();
-                            }, 5000);
+                                // Grab the router IP from the original URL params
+                                const currentIp = urlParams.get('routerIp') || urlParams.get('ip') || (window.mTikData ? window.mTikData.ip : "10.0.0.1");
+                                
+                                // Redirect to the success screen, passing the voucher and IP in the URL
+                                window.location.href = `success.html?voucher=${checkData.voucher}&ip=${currentIp}`;
+                            }, 1500);
                         } else if (attempts >= maxAttempts) {
                             clearInterval(pollInterval);
                             btnPay.innerHTML = originalText;
@@ -230,10 +228,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (res.ok) {
                 showToast("Code accepted! Connecting...");
-                // Use backend-provided credentials, fallback to the code entered
-                document.getElementById('mtik-user').value = data.username || voucher;
-                document.getElementById('mtik-pass').value = data.password || voucher; 
-                document.getElementById('mtik-login-form').submit();
+                
+                setTimeout(() => {
+                    const currentIp = urlParams.get('routerIp') || urlParams.get('ip') || (window.mTikData ? window.mTikData.ip : "10.0.0.1");
+                    window.location.href = `success.html?voucher=${data.username || voucher}&ip=${currentIp}`;
+                }, 1500);
             } else {
                 throw new Error(data.detail || "Invalid code or used on another device");
             }
