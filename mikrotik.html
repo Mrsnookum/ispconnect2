@@ -76,6 +76,11 @@
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px; }
         .kpi-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
         .kpi-val { font-size: 1.75rem; font-weight: 700; color: var(--text-dark); }
+        
+        /* NEW: Hover effects for clickable metric cards */
+        .metric-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .metric-card:active { transform: translateY(0); }
 
         .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #E2E8F0; }
         .filter-tabs { display: flex; gap: 8px; }
@@ -236,19 +241,19 @@
 
                 <!-- KPIs -->
                 <div class="kpi-grid">
-                    <div class="card" style="padding: 16px 20px;">
+                    <div class="card metric-card filter-btn" data-filter="All" style="padding: 16px 20px; border: none;">
                         <div class="kpi-label">Total Routers</div>
                         <div class="kpi-val" id="stat-total">0</div>
                     </div>
-                    <div class="card" style="padding: 16px 20px;">
+                    <div class="card metric-card filter-btn" data-filter="Online" style="padding: 16px 20px; border: none;">
                         <div class="kpi-label">Online</div>
                         <div class="kpi-val" id="stat-online" style="color: var(--primary);">0</div>
                     </div>
-                    <div class="card" style="padding: 16px 20px;">
+                    <div class="card metric-card filter-btn" data-filter="Offline" style="padding: 16px 20px; border: none;">
                         <div class="kpi-label">Offline</div>
                         <div class="kpi-val" id="stat-offline" style="color: var(--text-muted);">0</div>
                     </div>
-                    <div class="card" style="padding: 16px 20px;">
+                    <div class="card metric-card filter-btn" data-filter="Onboarding" style="padding: 16px 20px; border: none;">
                         <div class="kpi-label">Onboarding</div>
                         <div class="kpi-val" id="stat-onboarding" style="color: #F59E0B;">0</div>
                     </div>
