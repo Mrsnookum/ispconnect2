@@ -65,25 +65,119 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 3000);
     }
 
-    // --- FILTER TABS LOGIC ---
-    const filterBtns = document.querySelectorAll('.filter-tabs .filter-btn');
-    const tableEmptyText = document.getElementById('table-empty-text');
+    // --- DASHBOARD DATA & LIVE FILTERING LOGIC ---
+    let allRouters = [];
 
-    filterBtns.forEach(btn => {
+    function renderRouters(filterType) {
+        const tbody = document.querySelector('table tbody');
+        if (!tbody) return;
+
+        let filtered = allRouters;
+        if (filterType === 'Online') filtered = allRouters.filter(r => r.status === 'Online');
+        if (filterType === 'Offline') filtered = allRouters.filter(r => r.status === 'Offline');
+        if (filterType === 'Onboarding') filtered = allRouters.filter(r => r.provisioning_status === 'Awaiting_Services');
+
+        if (filtered.length === 0) {
+            const emptyText = filterType === 'All' ? 'routers' : filterType.toLowerCase() + ' routers';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                        <i data-lucide="hard-drive" width="40" style="margin-bottom: 12px; opacity: 0.5;"></i>
+                        <p style="margin: 0; font-size: 0.9rem;">No ${emptyText} found.</p>
+                    </td>
+                </tr>`;
+        } else {
+            tbody.innerHTML = filtered.map(r => `
+                <tr>
+                    <td>${new Date(r.created_at).toLocaleDateString()}</td>
+                    <td><strong>${r.name || r.identity}</strong></td>
+                    <td>${r.identity}</td>
+                    <td>${r.ip_address || 'Unknown'}</td>
+                    <td><span class="badge" style="padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; background: ${r.status === 'Online' ? 'var(--primary-light)' : '#FEE2E2'}; color: ${r.status === 'Online' ? 'var(--primary)' : '#EF4444'};">${r.status}</span></td>
+                    <td><button class="btn btn-sm action-btn" style="padding: 4px 8px; border: 1px solid #E2E8F0; background: transparent; border-radius: 4px; cursor: pointer; color: var(--text-dark); transition: all 0.2s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">Manage</button></td>
+                </tr>
+            `).join('');
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // Tab Clicks
+    const filterTabs = document.querySelectorAll('.filter-tabs .filter-btn');
+    filterTabs.forEach(btn => {
         btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('active'));
+            filterTabs.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            const filterType = btn.getAttribute('data-filter');
-            if (tableEmptyText) {
-                if(filterType === 'All') {
-                    tableEmptyText.innerText = `No routers found. Click "Link a MikroTik" to get started.`;
-                } else {
-                    tableEmptyText.innerText = `No ${filterType.toLowerCase()} routers found.`;
-                }
-            }
+            renderRouters(btn.getAttribute('data-filter'));
         });
     });
+
+    // Connect Big Metric Cards to the Tabs
+    document.querySelectorAll('.metric-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const filter = card.getAttribute('data-filter');
+            const targetTab = document.querySelector(`.filter-tabs .filter-btn[data-filter="${filter}"]`);
+            if (targetTab) targetTab.click();
+        });
+    });
+
+    async function loadDashboardRouters() {
+        try {
+            const response = await fetch(`${API_BASE}/api/provision/routers`, {
+                headers: { "ngrok-skip-browser-warning": "true" }
+            });
+            const result = await response.json();
+
+            if (result.status === "success") {
+                const now = new Date();
+                
+                // --- HEARTBEAT LOGIC: Calculate accurate status based on last_seen_at ---
+                result.data.forEach(r => {
+                    if (r.last_seen_at) {
+                        const lastSeen = new Date(r.last_seen_at);
+                        const diffMinutes = (now - lastSeen) / (1000 * 60);
+                        if (diffMinutes > 3) {
+                            r.status = 'Offline';
+                        }
+                    }
+                });
+                
+                allRouters = result.data;
+
+                // Calculate Stats
+                const totalCount = allRouters.length;
+                const onlineCount = allRouters.filter(r => r.status === 'Online').length;
+                const offlineCount = allRouters.filter(r => r.status === 'Offline').length;
+                const onboardingCount = allRouters.filter(r => r.provisioning_status === 'Awaiting_Services').length;
+
+                // Update Big Stat Cards 
+                if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = totalCount;
+                if(document.getElementById('stat-online')) document.getElementById('stat-online').innerText = onlineCount;
+                if(document.getElementById('stat-offline')) document.getElementById('stat-offline').innerText = offlineCount;
+                if(document.getElementById('stat-onboarding')) document.getElementById('stat-onboarding').innerText = onboardingCount;
+
+                // Update Tab Counters
+                const tabAll = document.querySelector('.filter-tabs .filter-btn[data-filter="All"]');
+                const tabOnline = document.querySelector('.filter-tabs .filter-btn[data-filter="Online"]');
+                const tabOffline = document.querySelector('.filter-tabs .filter-btn[data-filter="Offline"]');
+                const tabOnboarding = document.querySelector('.filter-tabs .filter-btn[data-filter="Onboarding"]');
+                
+                if(tabAll) tabAll.innerText = `All (${totalCount})`;
+                if(tabOnline) tabOnline.innerText = `Online (${onlineCount})`;
+                if(tabOffline) tabOffline.innerText = `Offline (${offlineCount})`;
+                if(tabOnboarding) tabOnboarding.innerText = `Onboarding (${onboardingCount})`;
+
+                // Render current active tab
+                const activeTab = document.querySelector('.filter-tabs .filter-btn.active');
+                renderRouters(activeTab ? activeTab.getAttribute('data-filter') : 'All');
+            }
+        } catch (err) {
+            console.error("Failed to load dashboard routers:", err);
+        }
+    }
+
+    // Call immediately, then refresh every 60 seconds
+    loadDashboardRouters();
+    setInterval(loadDashboardRouters, 60000);
 
     // --- WIZARD LOGIC ---
     let activeProvisioningToken = null; 
@@ -164,24 +258,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnGenerateScript) {
         btnGenerateScript.addEventListener('click', async () => {
             
-            // 1. Gather form input (Only Identity now!)
             const identityInput = document.getElementById('mikrotik-identity');
             const identity = identityInput ? identityInput.value.trim() : '';
 
-            // 2. Validate
             if(!identity) {
                 showToast("Please enter a MikroTik Identity.", "error");
                 if (identityInput) identityInput.focus();
                 return;
             }
 
-            // 3. UI Loading State
             const originalBtnText = btnGenerateScript.innerHTML;
             btnGenerateScript.disabled = true;
             btnGenerateScript.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;display:inline-block;vertical-align:middle;margin-right:8px;"></div> Generating...`;
 
             try {
-                // 4. Hit Backend (IP and DNS are dynamically handled by the server now)
                 const response = await fetch(`${API_BASE}/api/provision/init`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -198,7 +288,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
                 activeProvisioningToken = data.token; 
 
-                // 5. Update UI to show the terminal and hide the form
                 if (step3Form) step3Form.style.display = 'none';
                 if (step3Terminal) step3Terminal.style.display = 'block';
 
@@ -208,8 +297,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 showToast("Provisioning command generated.");
-                
-                // 6. Start listening for the router to phone home
                 startPollingBackend(data.token);
 
             } catch (err) {
@@ -222,23 +309,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- UNIVERSAL COPY BUTTON LOGIC (Handles Steps 1, 2, and 3) ---
+    // --- UNIVERSAL COPY BUTTON LOGIC ---
     document.querySelectorAll('.btn-copy').forEach(btn => {
-        // Strip any raw HTML onclick handlers to prevent browser conflicts
         btn.removeAttribute('onclick');
-
         btn.addEventListener('click', () => {
             let textToCopy = "";
             const dataCommand = btn.getAttribute('data-command');
             
-            // Determine where the text is coming from based on the step
             if (dataCommand) {
-                textToCopy = dataCommand; // Uses the clean data attribute (Steps 1 & 2)
+                textToCopy = dataCommand; 
             } else if (btn.id === 'btn-copy-command') {
                 const textElem = document.getElementById('provisioning-command-text');
-                if (textElem) textToCopy = textElem.innerText; // Grabs the generated backend script (Step 3)
+                if (textElem) textToCopy = textElem.innerText; 
             } else {
-                // Fallback: Check if there's a code block right next to the button
                 const prevElem = btn.previousElementSibling;
                 if (prevElem && prevElem.tagName === 'CODE') {
                     textToCopy = prevElem.innerText;
@@ -248,14 +331,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!textToCopy) return;
 
             navigator.clipboard.writeText(textToCopy).then(() => {
-                // Show visual checkmark directly on the button
                 btn.innerHTML = `<i data-lucide="check" width="20" color="var(--primary)"></i>`;
                 if (typeof lucide !== 'undefined') lucide.createIcons({ root: btn });
                 
-                // Fire the custom application toast
                 showToast("Command copied to clipboard!");
 
-                // Revert the button icon after 2 seconds
                 setTimeout(() => {
                     btn.innerHTML = `<i data-lucide="copy" width="20"></i>`;
                     if (typeof lucide !== 'undefined') lucide.createIcons({ root: btn });
@@ -266,64 +346,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     });
-
-    // --- Fetch and Display Dashboard Data ---
-    async function loadDashboardRouters() {
-        try {
-            const response = await fetch(`${API_BASE}/api/provision/routers`, {
-                headers: { "ngrok-skip-browser-warning": "true" }
-            });
-            const result = await response.json();
-
-            if (result.status === "success") {
-                const routers = result.data;
-                const tbody = document.querySelector('table tbody'); 
-
-                // --- NEW HEARTBEAT LOGIC: Calculate accurate status based on last_seen_at ---
-                const now = new Date();
-                routers.forEach(r => {
-                    if (r.last_seen_at) {
-                        const lastSeen = new Date(r.last_seen_at);
-                        const diffMinutes = (now - lastSeen) / (1000 * 60);
-                        if (diffMinutes > 3) {
-                            r.status = 'Offline';
-                        }
-                    }
-                });
-
-                // Calculate Stats
-                let onlineCount = routers.filter(r => r.status === 'Online').length;
-                let onboardingCount = routers.filter(r => r.provisioning_status === 'Awaiting_Services').length;
-
-                // Update Stat Cards 
-                if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = routers.length;
-                if(document.getElementById('stat-online')) document.getElementById('stat-online').innerText = onlineCount;
-                if(document.getElementById('stat-onboarding')) document.getElementById('stat-onboarding').innerText = onboardingCount;
-
-                // Populate Table
-                if (tbody && routers.length > 0) {
-                    if(tableEmptyText && tableEmptyText.parentElement) {
-                        tableEmptyText.parentElement.style.display = 'none'; // Hide empty state
-                    }
-                    tbody.innerHTML = routers.map(r => `
-                        <tr>
-                            <td>${new Date(r.created_at).toLocaleDateString()}</td>
-                            <td><strong>${r.name || r.identity}</strong></td>
-                            <td>${r.identity}</td>
-                            <td>${r.ip_address || 'Unknown'}</td>
-                            <td><span class="badge" style="padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; background: ${r.status === 'Online' ? 'var(--primary-light)' : '#FEE2E2'}; color: ${r.status === 'Online' ? 'var(--primary)' : '#EF4444'};">${r.status}</span></td>
-                            <td><button class="btn btn-sm action-btn" style="padding: 4px 8px; border: 1px solid #E2E8F0; background: transparent; border-radius: 4px; cursor: pointer; color: var(--text-dark); transition: all 0.2s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">Manage</button></td>
-                        </tr>
-                    `).join('');
-                }
-            }
-        } catch (err) {
-            console.error("Failed to load dashboard routers:", err);
-        }
-    }
-
-    // Call this immediately when the page loads
-    loadDashboardRouters();
 
     // --- ZERO-TOUCH POLLING: Router Connects -> Setup Complete! ---
     function startPollingBackend(token) {
@@ -343,10 +365,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
                 if (data.status === "connected") {
                     clearInterval(pollingInterval);
-
                     showToast("Router successfully provisioned and ready!");
 
-                    // Immediately swap views and refresh table. No Step 3 required!
                     if (wizardView) wizardView.style.display = 'none';
                     if (dashboardView) dashboardView.style.display = 'block';
 
@@ -363,21 +383,17 @@ document.addEventListener("DOMContentLoaded", () => {
         clearInterval(pollingInterval);
         activeProvisioningToken = null; 
 
-        // Reset display views
         if (step1) step1.style.display = 'block';
         if (step2) step2.style.display = 'none';
         if (step3) step3.style.display = 'none';
         
-        // Reset sub-views in Step 3
         if (step3Form) step3Form.style.display = 'block';
         if (step3Terminal) step3Terminal.style.display = 'none';
 
-        // Reset Stepper UI
         if (ind1) ind1.classList.add('active');
         if (ind2) ind2.classList.remove('active');
         if (ind3) ind3.classList.remove('active');
 
-        // Clear Inputs
         const identityInput = document.getElementById('mikrotik-identity');
         if (identityInput) identityInput.value = '';
     }
