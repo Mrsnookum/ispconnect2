@@ -279,6 +279,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 const routers = result.data;
                 const tbody = document.querySelector('table tbody'); 
 
+                // --- NEW HEARTBEAT LOGIC: Calculate accurate status based on last_seen_at ---
+                const now = new Date();
+                routers.forEach(r => {
+                    if (r.last_seen_at) {
+                        const lastSeen = new Date(r.last_seen_at);
+                        const diffMinutes = (now - lastSeen) / (1000 * 60);
+                        if (diffMinutes > 3) {
+                            r.status = 'Offline';
+                        }
+                    }
+                });
+
                 // Calculate Stats
                 let onlineCount = routers.filter(r => r.status === 'Online').length;
                 let onboardingCount = routers.filter(r => r.provisioning_status === 'Awaiting_Services').length;
@@ -299,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <td><strong>${r.name || r.identity}</strong></td>
                             <td>${r.identity}</td>
                             <td>${r.ip_address || 'Unknown'}</td>
-                            <td><span class="badge ${r.status === 'Online' ? 'bg-success' : 'bg-secondary'}" style="padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; background: ${r.status === 'Online' ? 'var(--primary-light)' : '#F1F5F9'}; color: ${r.status === 'Online' ? 'var(--primary)' : 'var(--text-muted)'};">${r.status}</span></td>
+                            <td><span class="badge" style="padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; background: ${r.status === 'Online' ? 'var(--primary-light)' : '#FEE2E2'}; color: ${r.status === 'Online' ? 'var(--primary)' : '#EF4444'};">${r.status}</span></td>
                             <td><button class="btn btn-sm action-btn" style="padding: 4px 8px; border: 1px solid #E2E8F0; background: transparent; border-radius: 4px; cursor: pointer; color: var(--text-dark); transition: all 0.2s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">Manage</button></td>
                         </tr>
                     `).join('');
